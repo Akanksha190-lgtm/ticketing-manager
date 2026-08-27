@@ -77,7 +77,7 @@
                                         {{-- Airline --}}
                                         <td>
                                             <span class="airline-text">
-                                                {{ $fare_entry->airline }}
+                                                {{ $fare_entry->airline->airline ?? '-' }}
                                             </span>
                                         </td>
                                         {{-- Route --}}
@@ -121,7 +121,7 @@
                                         {{-- Discount / Commission --}}
                                         <td>
                                             <span class="disc-comm-text">
-                                                {{ number_format($fare_entry->disc_comm, 1) }}%
+                                                {{ number_format($fare_entry->airline->au_commission ?? 0, 1) }}%
                                             </span>
                                         </td>
 

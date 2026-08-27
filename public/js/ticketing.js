@@ -73,8 +73,6 @@ function toast(message, type = 'success') {
 
     stack.appendChild(el);
 
-    console.log('Toast added:', message);
-
     setTimeout(() => {
         el.style.opacity = '0';
         el.style.transition = 'opacity .25s';
@@ -159,7 +157,7 @@ function formatValidUntil(dateString) {
     if (!dateString) return '-';
 
     // Remove time part
-    const dateOnly = dateString.split('T')[0];
+    const dateOnly = String(dateString).split(/[T ]/)[0];
 
     const [year, month, day] = dateOnly.split('-');
 
@@ -167,6 +165,9 @@ function formatValidUntil(dateString) {
         'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ];
+    if (!year || !month || !day) {
+        return dateString;
+    }
 
     return `${day} ${months[parseInt(month) - 1]} ${year}`;
 }
@@ -239,10 +240,14 @@ if (fareForm) {
 //edit -cancel -save buttons
 document.addEventListener('click', function(e) {
 
-    // EDIT
-    if (e.target.classList.contains('edit-commission')) {
+    const buttonTarget = e.target.closest('button');
 
-        const button = e.target;
+    if (!buttonTarget) return;
+
+    // EDIT
+    if (buttonTarget.classList.contains('edit-commission')) {
+
+        const button = buttonTarget;
         const id = button.dataset.id;
 
         const row = document.getElementById('commission-row-' + id);
@@ -255,7 +260,7 @@ document.addEventListener('click', function(e) {
 
         const exau = row.querySelector('.exau-text').innerText.replace('%', '').trim();
 
-        // ORIGINAL VALUES SAVE KARO
+        // ORIGINAL VALUES SAVE 
         row.dataset.airline = airline;
         row.dataset.code = code;
         row.dataset.numeric = numeric;
@@ -281,7 +286,7 @@ document.addEventListener('click', function(e) {
 
 
         // Edit -> Save
-        button.innerText = 'Save';
+        button.innerHTML = '<i class="bi bi-check" title="Save"></i>';
 
         button.classList.remove('edit-commission');
         button.classList.add('save-commission');
@@ -296,15 +301,15 @@ document.addEventListener('click', function(e) {
         cancelButton.type = 'button';
         cancelButton.className = 'btn cancel-commission';
         cancelButton.dataset.id = id;
-        cancelButton.innerText = 'Cancel';
+        cancelButton.innerHTML = '<i class="bi bi-x" title="Cancel"></i>';
 
         button.parentNode.appendChild(cancelButton);
     }
 
     // CANCEL
-    else if (e.target.classList.contains('cancel-commission')) {
+    else if (buttonTarget.classList.contains('cancel-commission')) {
 
-        const button = e.target;
+        const button = buttonTarget;
         const id = button.dataset.id;
 
         const row = document.getElementById('commission-row-' + id);
@@ -328,7 +333,7 @@ document.addEventListener('click', function(e) {
         // Save button ko Edit bana do
         const saveButton = row.querySelector('.save-commission');
 
-        saveButton.innerText = 'Edit';
+        saveButton.innerHTML = '<i class="bi bi-pencil-square" title="Edit"></i>';
 
         saveButton.classList.remove('save-commission');
         saveButton.classList.add('edit-commission');
@@ -337,9 +342,9 @@ document.addEventListener('click', function(e) {
         button.remove();
     }
     // SAVE
-    else if (e.target.classList.contains('save-commission')) {
+    else if (buttonTarget.classList.contains('save-commission')) {
 
-        const button = e.target;
+        const button = buttonTarget;
         const id = button.dataset.id;
 
         const row = document.getElementById('commission-row-' + id);
@@ -417,15 +422,25 @@ document.addEventListener('click', function(e) {
 //----------------- Fare entry table edit/save/cancel -----------------
 document.addEventListener('click', function(e) {
 
+    const buttonTarget = e.target.closest('button');
+
+    if (!buttonTarget) return;
+
     // =========================
     // EDIT
     // =========================
-    if (e.target.classList.contains('edit-fare-entry')) {
+    if (buttonTarget.classList.contains('edit-fare-entry')) {
 
-        const button = e.target;
+        const button = buttonTarget;
         const id = button.dataset.id;
 
         const row = document.getElementById('fare-entry-row-' + id);
+
+        const codeCell = row.querySelector('.route-code-cell');
+
+        if (codeCell) {
+            row.dataset.originalCodeHtml = codeCell.innerHTML;
+        }
 
         const airline = row.querySelector('.airline-text').innerText.trim();
         const origin = row.dataset.origin;
@@ -437,7 +452,7 @@ document.addEventListener('click', function(e) {
         const source = row.querySelector('.source-text').innerText.trim();
 
         const published = row.querySelector('.published-text').innerText.replace(/[A-Z]{3}\s*/i, '').replace(/,/g, '').trim();
-        const discComm = row.querySelector('.disc-comm-text').innerText.replace('%', '').trim();
+        const auComm = row.querySelector('.disc-comm-text').innerText.replace('%', '').trim();
         const net = row.querySelector('.net-text').innerText.replace(/[A-Z]{3}\s*/i, '').replace(/,/g, '').trim();
         const markup = row.querySelector('.markup-text').innerText.replace(/[A-Z]{3}\s*/i, '').replace(/,/g, '').trim();
         const gross = row.querySelector('.gross-text').innerText.replace(/[A-Z]{3}\s*/i, '').replace(/,/g, '').trim();
@@ -471,7 +486,7 @@ document.addEventListener('click', function(e) {
         row.dataset.cabin = cabin;
         row.dataset.source = source;
         row.dataset.published = published;
-        row.dataset.discComm = discComm;
+        row.dataset.auComm = auComm;
         row.dataset.net = net;
         row.dataset.markup = markup;
         row.dataset.gross = gross;
@@ -480,6 +495,8 @@ document.addEventListener('click', function(e) {
         row.dataset.origin = origin;
         row.dataset.destination = destination;
         row.dataset.currency = currency;
+        row.dataset.originCode = originCode;
+        row.dataset.destinationCode = destinationCode;
 
         // Make editable
         row.cells[0].innerHTML =
@@ -498,7 +515,7 @@ document.addEventListener('click', function(e) {
             `<input type="number" step="0.01" class="edit-input form-control form-control-sm" value="${published}">`;
 
         row.cells[5].innerHTML =
-            `<input type="number" step="0.1" class="edit-input form-control form-control-sm" value="${discComm}">`;
+            `<input type="number" step="0.1" class="edit-input form-control form-control-sm" value="${auComm}">`;
 
         row.cells[6].innerHTML =
             `<input type="number" step="0.01" class="edit-input form-control form-control-sm" value="${net}">`;
@@ -517,7 +534,7 @@ document.addEventListener('click', function(e) {
 
 
         // Edit -> Save
-        button.innerText = 'Save';
+        button.innerHTML = '<i class="bi bi-check" title="Save"></i>';
 
         button.classList.remove('edit-fare-entry');
         button.classList.add('save-fare-entry');
@@ -529,7 +546,7 @@ document.addEventListener('click', function(e) {
         cancelButton.type = 'button';
         cancelButton.className = 'btn cancel-fare-entry';
         cancelButton.dataset.id = id;
-        cancelButton.innerText = 'Cancel';
+        cancelButton.innerHTML = '<i class="bi bi-x" title="Cancel"></i>';
 
         button.parentNode.appendChild(cancelButton);
     }
@@ -538,20 +555,28 @@ document.addEventListener('click', function(e) {
     // =========================
     // CANCEL
     // =========================
-    else if (e.target.classList.contains('cancel-fare-entry')) {
+    else if (buttonTarget.classList.contains('cancel-fare-entry')) {
 
-        const button = e.target;
+        const button = buttonTarget;
         const id = button.dataset.id;
 
         const row =document.getElementById('fare-entry-row-' + id);
 
         const validUntil = row.dataset.validUntil;
-        
+        const codeCell = row.querySelector('.route-code-cell');
+        const originCode = row.dataset.originCode || '';
+        const destinationCode = row.dataset.destinationCode || '';
+
+        if (codeCell && row.dataset.originalCodeHtml !== undefined) {
+            codeCell.innerHTML = row.dataset.originalCodeHtml;
+        }
         // Restore original values
         row.cells[0].innerHTML =
             `<span class="airline-text">${row.dataset.airline}</span>`;
 
-        row.cells[1].innerHTML = `<strong class="route-text">${row.dataset.origin} (${row.dataset.originCode || ''}) → ${row.dataset.destination} (${row.dataset.destinationCode || ''})</strong>`;
+        row.cells[1].innerHTML = `<strong class="route-text">${row.dataset.origin} (${originCode})  → ${row.dataset.destination} (${destinationCode})</strong>
+        ${!originCode || !destinationCode? `<button type="button" class="btn btn-sm btn-outline-primary ms-2 add-route-code-btn" data-bs-toggle="modal" data-bs-target="#routeCodeModal${id}">Add Code</button>`: ''
+        }`;
 
         row.cells[2].innerHTML =
             `<span class="cabin-text">${row.dataset.cabin}</span>`;
@@ -563,7 +588,7 @@ document.addEventListener('click', function(e) {
             `<span class="published-text"><strong><span class="currency-text">${row.dataset.currency}</span> ${row.dataset.published}</span></strong`;
 
         row.cells[5].innerHTML =
-            `<span class="disc-comm-text"><strong>${row.dataset.discComm}</span>%</strong>`;
+            `<span class="disc-comm-text"><strong>${row.dataset.auComm}</span>%</strong>`;
 
         row.cells[6].innerHTML =
             `<span class="net-text"><strong><span class="currency-text">${row.dataset.currency}</span> ${row.dataset.net}</span><strong>`;
@@ -582,10 +607,9 @@ document.addEventListener('click', function(e) {
 
 
         // Save -> Edit
-        const saveButton =
-            row.querySelector('.save-fare-entry');
+        const saveButton = row.querySelector('.save-fare-entry');
 
-        saveButton.innerText = 'Edit';
+        saveButton.innerHTML = '<i class="bi bi-pencil-square" title="Edit"></i>';
 
         saveButton.classList.remove('save-fare-entry');
         saveButton.classList.add('edit-fare-entry');
@@ -599,24 +623,22 @@ document.addEventListener('click', function(e) {
     // =========================
     // SAVE
     // =========================
-    else if (e.target.classList.contains('save-fare-entry')) {
+    else if (buttonTarget.classList.contains('save-fare-entry')) {
 
-        const button = e.target;
+        const button = buttonTarget;
         const id = button.dataset.id;
 
-        const row =
-            document.getElementById('fare-entry-row-' + id);
+        const row = document.getElementById('fare-entry-row-' + id);
 
-        const inputs =
-            row.querySelectorAll('.edit-input');
+        const inputs = row.querySelectorAll('.edit-input');
 
-        const airline = inputs[0].value;
+        const airline_id = inputs[0].value;
         const origin = inputs[1].value;
         const destination = inputs[2].value;
         const cabin = inputs[3].value;
         const source = inputs[4].value;
         const published = inputs[5].value;
-        const discComm = inputs[6].value;
+        const auComm = inputs[6].value;
         const net = inputs[7].value;
         const markup = inputs[8].value;
         const gross = inputs[9].value;
@@ -638,13 +660,13 @@ document.addEventListener('click', function(e) {
 
                 _method: 'PUT',
 
-                airline: airline,
+                airline_id: airline_id,
                 origin: origin,
                 destination: destination,
                 cabin: cabin,
                 source: source,
                 published: published,
-                disc_comm: discComm,
+                au_commission: auComm,
                 net: net,
                 markup: markup,
                 gross: gross,
@@ -691,21 +713,59 @@ document.addEventListener('click', function(e) {
     // =========================
     // DELETE
     // =========================
-    if (e.target.classList.contains('delete-fare-entry')) {
+    if (buttonTarget.classList.contains('delete-fare-entry')) {
 
-        const id = e.target.dataset.id;
+        const id = buttonTarget.dataset.id;
 
-        deleteFareEntry(id);
+        confirmDeleteFareEntry(id);
     }
 
 });
 
 //delete fare entry
-function deleteFareEntry(id) {
+function confirmDeleteFareEntry(id) {
 
-    if (!confirm('Are you sure you want to delete this fare entry?')) {
+    const stack = document.getElementById('toast-stack');
+
+    if (!stack) {
+        deleteFareEntry(id);
         return;
     }
+
+    const confirmation = document.createElement('div');
+    confirmation.className = 'delete-confirmation';
+    confirmation.style.position = 'fixed';
+    confirmation.style.inset = '0';
+    confirmation.style.zIndex = '1000000';
+    confirmation.style.display = 'flex';
+    confirmation.style.alignItems = 'center';
+    confirmation.style.justifyContent = 'center';
+    confirmation.style.backgroundColor = 'rgba(15, 23, 42, 0.45)';
+    confirmation.innerHTML = `
+        <div style="width: min(380px, calc(100% - 32px)); padding: 24px; border-radius: 10px; background: #fff; color: var(--text-primary); box-shadow: var(--shadow-lg); text-align: center;">
+            <i class="bi bi-exclamation-triangle" style="font-size: 32px; color: var(--status-critical);"></i>
+            <h5 style="margin: 12px 0 8px;">Are you sure?</h5>
+            <p style="margin: 0 0 20px; color: var(--text-muted);">Do you want to delete this fare entry?</p>
+            <div style="display: flex; justify-content: center; gap: 10px;">
+                <button type="button" class="btn confirm-cancel-button cancel-delete-fare">Cancel</button>
+                <button type="button" class="btn confirm-delete-button confirm-delete-fare"><i class="bi bi-trash"></i> Delete</button>
+            </div>
+        </div>
+    `;
+
+    stack.appendChild(confirmation);
+
+    confirmation.querySelector('.confirm-delete-fare').addEventListener('click', () => {
+        confirmation.remove();
+        deleteFareEntry(id);
+    });
+
+    confirmation.querySelector('.cancel-delete-fare').addEventListener('click', () => {
+        confirmation.remove();
+    });
+}
+
+function deleteFareEntry(id) {
 
     fetch('/fare-commission-entries/' + id, {
 
@@ -721,7 +781,6 @@ function deleteFareEntry(id) {
 
         const text = await response.text();
 
-        console.log('Delete status:', response.status);
         console.log('Delete response:', text);
 
         if (!response.ok) {
@@ -786,24 +845,11 @@ const TOPBAR_COPY = {
   ticketing: { title: "Ticketing Team", desc: "Everything needed to issue a ticket correctly — net fare, applicable IATA/BSP commission or private discount, sell price, and margin." }
 };
 
-// document.querySelectorAll(".nav-item").forEach(item => {
-//   item.addEventListener("click", () => {
-//     document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
-//     document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
-//     item.classList.add("active");
-//     document.getElementById(`view-${item.dataset.view}`).classList.add("active");
-//     const copy = TOPBAR_COPY[item.dataset.view];
-//     document.getElementById("topbar-title").textContent = copy.title;
-//     document.getElementById("topbar-desc").textContent = copy.desc;
-//   });
-// });
-
 // ---------------- Init ----------------
 
 const searchForm = document.getElementById('master-search-form');
 
 if (searchForm) {
-    console.log('Search form found');
     searchForm.addEventListener('submit', function (e) {
         e.preventDefault();
 
@@ -826,7 +872,6 @@ if (searchForm) {
         .then(async response => {
 
             console.log('STATUS:', response.status);
-            console.log('CONTENT TYPE:', response.headers.get('content-type'));
 
             if (!response.ok) {
                 const text = await response.text();
@@ -838,13 +883,16 @@ if (searchForm) {
         })
         .then(data => {
 
-            console.log('SEARCH RESULT:', data);
-
             const tbody = document.getElementById('master-table-body');
 
             tbody.innerHTML = '';
 
             data.airlineCommissions.forEach(commission => {
+
+                const commissionActions = document.getElementById('view-manager') ? `
+                            <td>
+                                <button type="button" class="btn edit-commission" data-id="${commission.id}"><i class="bi bi-pencil-square" title="Edit"></i></button>
+                            </td>` : '';
 
                 tbody.innerHTML += `
                     <tr id="commission-row-${commission.id}">
@@ -878,14 +926,7 @@ if (searchForm) {
                             </span>
                         </td>
 
-                        <td>
-                            <button
-                                type="button"
-                                class="btn edit-commission"
-                                data-id="${commission.id}">
-                                Edit
-                            </button>
-                        </td>
+                        ${commissionActions}
                     </tr>
                 `;
             });
@@ -899,8 +940,6 @@ if (searchForm) {
 const fareSearchForm = document.getElementById('fare-search-form');
 
 if (fareSearchForm) {
-
-    console.log('Fare search form found');
 
     fareSearchForm.addEventListener('submit', function (e) {
 
@@ -944,12 +983,7 @@ if (fareSearchForm) {
         .then(async response => {
 
             console.log('FARE STATUS:', response.status);
-
-            console.log(
-                'FARE CONTENT TYPE:',
-                response.headers.get('content-type')
-            );
-
+            
             if (!response.ok) {
 
                 const text = await response.text();
@@ -966,8 +1000,6 @@ if (fareSearchForm) {
         })
 
         .then(data => {
-
-            console.log('FARE SEARCH RESULT:', data);
 
             const tbody = document.getElementById('ticketing-table-body');
 
@@ -987,14 +1019,12 @@ if (fareSearchForm) {
                     <tr>
 
                         <td>
-                            ${entry.airline ?? ''}
+                            ${entry.airline?.airline ?? ''}
                         </td>
 
                         <td>
                             <strong>
-                                ${entry.route
-                                    ? `${entry.route.origin ?? ''} → ${entry.route.destination ?? ''}`
-                                    : `${entry.origin ?? ''} → ${entry.destination ?? ''}`
+                                ${entry.route ? `${entry.route.origin ?? ''} (${entry.route.origin_code ?? ''}) → ${entry.route.destination ?? ''} (${entry.route.destination_code ?? ''})` : `${entry.origin ?? ''} → ${entry.destination ?? ''}`
                                 }
                             </strong>
                         </td>
@@ -1164,7 +1194,7 @@ function renderHistory(history) {
 
         if (log.action === 'updated') {
             actionClass = 'primary';
-            actionIcon = 'bi-pencil';
+            actionIcon = 'bi-pencil-square';
         }
 
         if (log.action === 'deleted') {
@@ -1184,6 +1214,9 @@ function renderHistory(history) {
 
                     <span class="history-date">
                         ${formatDateTime(log.created_at)}
+                        <span class="history-user">
+                            by ${log.user?.name || 'Unknown User'}
+                        </span>
                     </span>
 
                 </div>
@@ -1214,30 +1247,27 @@ function renderHistoryValues(log) {
         `;
     }
 
-    if (
-        log.action === 'updated' &&
-        log.old_values &&
-        log.new_values
-    ) {
+    if (log.action === 'updated' && log.old_values && log.new_values)
+    {
+        const oldValues = typeof log.old_values === 'string'? JSON.parse(log.old_values): log.old_values;
 
-        const oldValues =
-            typeof log.old_values === 'string'
-                ? JSON.parse(log.old_values)
-                : log.old_values;
-
-        const newValues =
-            typeof log.new_values === 'string'
-                ? JSON.parse(log.new_values)
-                : log.new_values;
+        const newValues = typeof log.new_values === 'string'? JSON.parse(log.new_values): log.new_values;
 
         let changes = '';
 
         Object.keys(newValues).forEach(key => {
 
-            const oldValue = oldValues[key] ?? '-';
-            const newValue = newValues[key] ?? '-';
+            const oldRawValue = oldValues[key] ?? '-';
+            const newRawValue = newValues[key] ?? '-';
 
-            if (String(oldValue) !== String(newValue)) {
+            let oldValue = oldRawValue;
+            let newValue = newRawValue;
+
+            if (key === 'valid_until' || key === 'created_at' || key === 'updated_at' || key === 'travel_from' || key === 'travel_to') {
+                oldValue = formatValidUntil(oldRawValue);
+                newValue = formatValidUntil(newRawValue);
+            }
+            if (String(oldRawValue) !== String(newRawValue)) {
 
                 const label = key
                     .replaceAll('_', ' ')
@@ -1283,10 +1313,15 @@ function renderHistoryValues(log) {
     return '';
 }
 
-document.getElementById('closeHistory').addEventListener('click', closeHistoryPanel);
+const closeHistoryBtn = document.getElementById('closeHistory');
+const historyOverlayBtn = document.getElementById('historyOverlay');
 
-document.getElementById('historyOverlay').addEventListener('click', closeHistoryPanel);
-
+if(closeHistoryBtn){
+    document.getElementById('closeHistory').addEventListener('click', closeHistoryPanel);
+}
+if(historyOverlayBtn){
+    document.getElementById('historyOverlay').addEventListener('click', closeHistoryPanel);
+}
 function closeHistoryPanel() {
 
     document.getElementById('historyPanel').classList.remove('active');
@@ -1329,14 +1364,11 @@ document.addEventListener('submit', function (e) {
         if (!response.ok) {
             throw new Error('Update failed');
         }
-
         return response.json();
 
     })
 
     .then(data => {
-
-        console.log('ROUTE CODE RESPONSE:', data);
 
         if (data.success) {
 
@@ -1361,30 +1393,34 @@ document.addEventListener('submit', function (e) {
             const row = document.getElementById(rowId);
 
             if (row) {
-                const routeText =row.querySelector('.route-text');
-                if (routeText) {
-                    const origin =row.dataset.origin;
+                const origin = row.dataset.origin;
+                const destination = row.dataset.destination;
 
-                    const destination =row.dataset.destination;
+                const originCode = data.origin_code || '';
+                const destinationCode = data.destination_code || '';
 
-                    routeText.innerHTML =`${origin} (${data.origin_code || ''}) → ${destination} (${data.destination_code || ''})`;
-                }
-                // Remove Add Code button
-                const addCodeButton =row.querySelector('.add-route-code-btn');
+                // Update dataset
+                row.dataset.originCode = originCode;
+                row.dataset.destinationCode = destinationCode;
 
-                if (addCodeButton) {
-                    addCodeButton.remove();
+                // Route cell
+                const routeCell = row.querySelector('.route-code-cell');
+
+                if (routeCell) {
+
+                    routeCell.innerHTML = `<strong class="route-text">${origin} (${originCode}) → ${destination} (${destinationCode})</strong>${!originCode || !destinationCode? `<button type="button"
+                            class="btn btn-sm btn-outline-primary ms-2 add-route-code-btn" data-bs-toggle="modal" data-bs-target="#routeCodeModal${row.id.replace('fare-entry-row-', '')}">Add Code</button>`: ''}`;
                 }
             }
 
-        } else {
+            } else {
 
-            toast(data.message || 'Update failed.','danger');
-            if (submitButton) {
-                submitButton.disabled = false;
-                submitButton.innerText = 'Save Codes';
+                toast(data.message || 'Update failed.','danger');
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.innerText = 'Save Codes';
+                }
             }
-        }
 
     })
     .catch(error => {

@@ -35,7 +35,7 @@
             <input type="hidden" id="fare-id" name="fare_id">
 
             <div><label>Airline</label><input type="text" id="f-airline" name="airline" placeholder="e.g. Air India" required></div>
-            <div><label>Airline code</label><input type="text" id="f-airline-code"  name="airline_code" placeholder="e.g. AI" maxlength="3" style="text-transform:uppercase"></div>
+            <div><label>Airline code</label><input type="text" id="f-airline-code"  name="airline_code_id" placeholder="e.g. AI" maxlength="3" style="text-transform:uppercase"></div>
             <div><label>Origin</label><input type="text" id="f-origin" name="origin" placeholder="e.g. Melbourne (MEL)" required></div>
             <div><label>Destination</label><input type="text" id="f-destination" name="destination" placeholder="e.g. Bengaluru (BLR)" required></div>
 
@@ -73,7 +73,7 @@
                     @endforeach
                 </select>
             </div>
-            <div><label>Discount / commission %</label><input type="number" step="0.1" id="f-commission-pct" name="disc_comm" placeholder="e.g. 10" required></div>
+            <div><label>Discount / commission %</label><input type="number" step="0.1" id="f-commission-pct" name="disc_comm" placeholder="e.g. 10" readonly></div>
             <div><label>Agency markup ($ flat)</label><input type="number" step="0.01" id="f-markup" name="markup" placeholder="e.g. 90" required></div>
 
             <div><label>Travel from</label><input type="date" id="f-travel-from" name="travel_from" required></div>
@@ -117,13 +117,13 @@
                 @foreach($farecomissentry as $fare_entry)
                     <tr id="fare-entry-row-{{ $fare_entry->id }}" data-origin="{{ $fare_entry->route->origin ?? '' }}" data-destination="{{ $fare_entry->route->destination ?? '' }}" data-currency="{{ $fare_entry->currency->code ?? '' }}" data-origin-code="{{ $fare_entry->route->origin_code ?? '' }}" data-destination-code="{{ $fare_entry->route->destination_code ?? '' }}" data-route-id="{{ $fare_entry->route->id ?? '' }}" data-route-exists="{{ $fare_entry->route ? '1' : '0' }}">
                         {{-- Airline --}}
-                        <td class="text-nowrap">
+                        <td class="text-nowrap airline-cell">
                             <span class="airline-text">
-                                {{ $fare_entry->airline }}
+                                {{ $fare_entry->airline->airline ?? '-' }}
                             </span>
                         </td>
                         {{-- Route --}}
-                        <td class="text-nowrap">
+                        <td class="text-nowrap route-code-cell">
                             @if($fare_entry->route)
                                 <strong class="route-text">
                                     {{ $fare_entry->route->origin }}
@@ -163,7 +163,7 @@
                         {{-- Discount / Commission --}}
                         <td class="text-nowrap">
                             <span class="disc-comm-text"><strong>
-                                {{ number_format($fare_entry->disc_comm, 1) }}%
+                                {{ number_format($fare_entry->airline->au_commission ?? 0, 1) }}%
                             </span></strong>
                         </td>
 
@@ -207,9 +207,9 @@
 
                         {{-- Actions --}}
                         <td class="text-nowrap">
-                            <button type="button" class="btn edit-fare-entry" data-id="{{ $fare_entry->id }}">Edit</button>
+                            <button type="button" class="btn edit-fare-entry" data-id="{{ $fare_entry->id }}" titlle="Edit"><i class="bi bi-pencil-square"></i></button>
 
-                            <button type="button" class="btn delete-fare-entry" data-id="{{ $fare_entry->id }}">Delete</button>
+                            <button type="button" class="btn delete-fare-entry" data-id="{{ $fare_entry->id }}" titlle="Delete"> <i class="bi bi-trash"></i></button>
                         </td>
                         <td>
                             <button type="button" class="btn btn-sm view-history" data-id="{{ $fare_entry->id }}" title="View History">
@@ -270,10 +270,8 @@
                             </span>
                         </td>
 
-                        <td>
-                            <button type="button" class="btn edit-commission" data-id="{{ $commission->id }}">
-                                Edit
-                            </button>
+                        <td class="text-nowrap">
+                            <button type="button" class="btn edit-commission" data-id="{{ $commission->id }}"><i class="bi bi-pencil-square"></i></button>
                         </td>
                     </tr>
                 @endforeach

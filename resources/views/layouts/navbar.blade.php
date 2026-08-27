@@ -18,7 +18,7 @@
 
                 <span class="txt">
                     <strong>Ticketing Manager</strong>
-                    <span>Add &amp; edit fares, commission</span>
+                    <span class="text-nowrap">Add &amp; edit fares, commission</span>
                 </span>
             </a>
         @endif
@@ -35,7 +35,7 @@
 
                 <span class="txt">
                     <strong>Ticketing Team</strong>
-                    <span>Fares &amp; issuance commission</span>
+                    <span class="text-nowrap">Fares &amp; issuance commission</span>
                 </span>
             </a>
         @endif

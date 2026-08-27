@@ -92,7 +92,7 @@
   }
   .pill .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--status-good); box-shadow: 0 0 0 3px var(--status-good-bg); }
 
-  main { padding: 24px 32px 60px; max-width: 1360px; }
+  main { width: 100%; padding: 24px 32px 60px; max-width: none; }
   .view { display: none; }
   .view.active { display: block; animation: fadeIn .25s ease; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(4px);} to { opacity: 1; transform: translateY(0);} }
@@ -166,7 +166,7 @@
     border: 1px solid var(--gridline); background: #fff; border-radius: var(--radius-sm); padding: 7px 13px; font-size: 12.3px;
     font-weight: 650; cursor: pointer; color: var(--text-primary); transition: all .15s; display: inline-flex; align-items: center; gap: 5px;
   }
-  button.btn:hover { border-color: var(--brand-blue); color: var(--brand-blue-dark); box-shadow: var(--shadow-sm); }
+  button.btn:hover {background: linear-gradient(135deg,var(--brand-blue),var(--brand-blue-dark));border-color: transparent;color: #fff;box-shadow: 0 4px 12px -4px rgba(42, 120, 214, 0.55);}
   button.btn.primary { background: linear-gradient(135deg, var(--brand-blue), var(--brand-blue-dark)); border-color: transparent; color: #fff; box-shadow: 0 4px 12px -4px rgba(42,120,214,0.55); }
   button.btn.primary:hover { filter: brightness(1.06); box-shadow: 0 6px 16px -4px rgba(42,120,214,0.6); }
   button.btn.danger:hover { border-color: var(--status-critical); color: var(--status-critical); }
@@ -237,6 +237,40 @@
 
 .toast.danger .dot {
     background: var(--status-critical);
+}
+
+.confirm-cancel-button,
+.confirm-delete-button {
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background-color .15s, border-color .15s, color .15s, transform .15s;
+}
+
+.confirm-cancel-button {
+  border: 1px solid var(--brand-blue);
+  background: var(--brand-blue-soft);
+  color: var(--brand-blue-dark);
+}
+
+.confirm-cancel-button:hover {
+  border-color: var(--brand-blue-dark);
+  background: var(--brand-blue);
+  color: #fff;
+}
+
+.confirm-delete-button {
+  border: 1px solid var(--status-critical);
+  background: var(--status-critical-bg);
+  color: var(--status-critical);
+}
+
+.confirm-delete-button:hover {
+  border-color: var(--status-critical);
+  background: var(--status-critical);
+  color: #fff;
+  transform: translateY(-1px);
 }
 
 @keyframes toastIn {

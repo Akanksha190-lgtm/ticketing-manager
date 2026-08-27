@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\AirlineCommission;
 use App\Models\FareCommissionEntries;
 use Illuminate\Support\Facades\View;
 use App\Observers\FareCommissionEntriesObserver;
+use App\Observers\AirlineCommissionObserver;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -30,7 +32,7 @@ class AppServiceProvider extends ServiceProvider
 
             $expiringFares = FareCommissionEntries::where('status', 'Expiring Soon')->count();
 
-            $carriers = FareCommissionEntries::whereNotNull('airline')
+            $carriers = AirlineCommission::whereNotNull('airline')
                 ->where('airline', '!=', '')
                 ->distinct()
                 ->count('airline');

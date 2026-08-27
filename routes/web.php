@@ -57,7 +57,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/airline-commissions/{id}',[App\Http\Controllers\CommissionMasterController::class, 'updateCommission'])->name('airline-commissions.update');
         Route::delete('/airline-commissions/{id}',[App\Http\Controllers\CommissionMasterController::class, 'destroyCommission'])->name('airline-commissions.destroy');
 
-        //route 
+        //route code
         Route::put('/routes/{id}/codes',[App\Http\Controllers\RouteController::class, 'updateCodes'])->name('routes.codes.update');
     });
 

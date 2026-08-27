@@ -72,6 +72,7 @@ class FareCommissionEntriesObserver
             'model_id' => $fareCommissionEntries->id,
             'old_values' => $fareCommissionEntries->getOriginal(),
             'new_values' => null,
+            'user_name' => auth()->user()->name,
         ]);
     }
 

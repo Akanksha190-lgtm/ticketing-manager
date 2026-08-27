@@ -12,8 +12,8 @@ class FareCommissionEntries extends Model
     protected $table = 'fare_and_commission_entries';
 
     protected $fillable = [
-        'airline',
-        'airline_code',
+        'airline_id',
+        'airline_code_id',
         'origin',
         'destination',
         'route_id',
@@ -63,4 +63,9 @@ class FareCommissionEntries extends Model
     {
         return $this->belongsTo(Currency::class,'currency_id');
     }
+
+    public function airline()
+{
+    return $this->belongsTo(AirlineCommission::class,'airline_id');
+}
 }

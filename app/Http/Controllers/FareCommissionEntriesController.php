@@ -14,19 +14,22 @@ class FareCommissionEntriesController extends Controller
 {
     public function index(Request $request)
     {
-        $search = $request->input('search');
+        $search = trim($request->input('search', ''));
         
         
-        $farecomissentry = FareCommissionEntries::with(['route','cabin', 'fareSource','currency'])
+        $farecomissentry = FareCommissionEntries::with(['route','cabin', 'fareSource','currency','airline'])
             ->orderBy('id', 'asc')
             ->get();
         $airlineCommissionsQuery = AirlineCommission::query();
 
-        if ($search) {
-            $airlineCommissionsQuery->where(function ($query) use ($search) {
-                $query->where('airline', 'LIKE', "%{$search}%")
-                      ->orWhere('code', 'LIKE', "%{$search}%");
-            });
+        if ($search !== '') {
+            $exactCodeExists = AirlineCommission::where('code', $search)->exists();
+
+            if ($exactCodeExists) {
+                $airlineCommissionsQuery->where('code', $search);
+            } else {
+                $airlineCommissionsQuery->where('airline', 'LIKE', "%{$search}%");
+            }
         }
         
         $airlineCommissions = $airlineCommissionsQuery->orderBy('id', 'asc')->get();
@@ -49,6 +52,25 @@ class FareCommissionEntriesController extends Controller
     {
         $data = $this->validatedData($request);
         
+        // Airline master table find/create
+        $airline = AirlineCommission::where(
+            ['airline' => trim($request->airline),],
+            ['code' => trim($request->airline_code_id),]
+        )->first();
+
+        if (!$airline) {
+            $airline = AirlineCommission::create([
+                'airline' => trim($request->airline),
+                'code' => trim($request->airline_code_id),
+            ]);
+        }
+        // Fare commission airline_id save
+        $data['airline_id'] = $airline->id;
+
+        //airline code id
+        $data['airline_code_id'] = $airline->id;
+        $data['au_commission'] = $airline->au_commission;
+
         $route = Route::firstOrCreate(
             [
                 'origin' => $request->origin,
@@ -62,7 +84,7 @@ class FareCommissionEntriesController extends Controller
 
         $data['route_id'] = $route->id;
 
-        unset($data['origin'], $data['destination']);
+        unset($data['origin'], $data['destination'],$data['airline'],$data['code'],);
 
         $entry = FareCommissionEntries::create($data);
 
@@ -92,15 +114,16 @@ class FareCommissionEntriesController extends Controller
                 'destination_code' => null,
             ]);
         }
+        $airline = AirlineCommission::where('airline',trim($request->airline_id))->first();
+        $oldAuCommission = $airline?->au_commission;
+        $hasAuCommission = $request->has('au_commission') && $request->input('au_commission') !== '';
+        
         $entry->update([
-            'airline' => $request->airline,
+            'airline_id' => $airline ? $airline->id : null,
             'route_id' => $route->id,
-            // 'origin' => $request->origin,
-            // 'destination' => $request->destination,
             'cabin_id' => $cabin ? $cabin->id : null,
             'source_id' => $source ? $source->id : null,
             'published' => $request->published,
-            'disc_comm' => $request->disc_comm,
             'net'     =>  $request->net,
             'markup' => $request->markup,
             'travel_from' => $request->travel_from,
@@ -110,7 +133,30 @@ class FareCommissionEntriesController extends Controller
             'status' => $request->status,
         ]);
 
-        // $entry->update($this->validatedData($request));
+        if ($hasAuCommission && $airline) {
+            $airline->update([
+                'au_commission' => $request->au_commission,
+            ]);
+            $airline->refresh();
+
+            // Keep the master commission change in the fare entry's existing audit card.
+            $auditLog = AuditLog::where('model_type', FareCommissionEntries::class)
+                ->where('model_id', $entry->id)
+                ->latest('id')
+                ->first();
+
+            if ($auditLog && $hasAuCommission) {
+                $oldValues = $auditLog->old_values ?? [];
+                $newValues = $auditLog->new_values ?? [];
+                $oldValues['au_commission'] = $oldAuCommission;
+                $newValues['au_commission'] = $airline->au_commission;
+
+                $auditLog->update([
+                    'old_values' => $oldValues,
+                    'new_values' => $newValues,
+                ]);
+            }
+        }
         
         return response()->json([
             'success' => true,
@@ -147,7 +193,7 @@ class FareCommissionEntriesController extends Controller
     {
         $data = $request->validate([
             'airline' => ['required', 'string', 'max:150'],
-            'airline_code' => ['required', 'string', 'max:10'],
+            'airline_code_id' => ['required', 'string', 'max:10'],
             'origin' => ['required', 'string', 'max:100'],
             'destination' => ['required', 'string', 'max:100'],
             'route_id' => ['nullable', 'integer', 'exists:routes,id'],
@@ -157,7 +203,7 @@ class FareCommissionEntriesController extends Controller
             'pcc_iata_ref' => ['nullable', 'string', 'max:100'],
             'published' => ['required', 'numeric', 'min:0'],
             'currency_id' => ['required', 'integer', 'exists:currencies,id'],
-            'disc_comm' => ['required', 'numeric', 'min:0', 'max:100'],
+            // 'disc_comm' => ['required', 'numeric', 'min:0', 'max:100'],
             'net' => ['nullable', 'numeric', 'min:0'],
             'markup' => ['required', 'numeric', 'min:0'],
             'travel_from' => ['nullable', 'date'],
@@ -182,15 +228,24 @@ class FareCommissionEntriesController extends Controller
         $source = $request->input('source');
         $status = $request->input('status');
         
-        $farecomissentryQuery = FareCommissionEntries::with('route','fareSource','cabin');
+        $farecomissentryQuery = FareCommissionEntries::with('route','fareSource','cabin','airline');
 
         if ($search) {
             $search = trim($search);
 
             $farecomissentryQuery->where(function ($query) use ($search) {
-                $query->where('airline', 'LIKE', "%{$search}%")
-                    ->orWhere('origin', 'LIKE', "%{$search}%")
+
+                // Airline master table
+                $query->whereHas('airline', function ($q) use ($search) {
+                    $q->where('airline', 'LIKE', "%{$search}%");
+                })
+
+                // Route table
+                ->orWhereHas('route', function ($q) use ($search) {
+                    $q->where('origin', 'LIKE', "%{$search}%")
                     ->orWhere('destination', 'LIKE', "%{$search}%");
+                });
+
             });
         }
 
@@ -209,7 +264,7 @@ class FareCommissionEntriesController extends Controller
 
         $activeFares = FareCommissionEntries::where('status', 'Active')->count();
 
-        $avgCommissionDiscount = FareCommissionEntries::whereNotNull('disc_comm')->avg('disc_comm');
+        $avgCommissionDiscount = AirlineCommission::whereNotNull('au_commission')->avg('au_commission');
 
         $totalMargin = FareCommissionEntries::whereNotNull('gross')->whereNotNull('net')->selectRaw('SUM(gross - net) as total_margin')->value('total_margin');
 
@@ -252,11 +307,23 @@ class FareCommissionEntriesController extends Controller
 
     public function history($id)
     {
-        $history = AuditLog::where('model_type', FareCommissionEntries::class)
+        $entry = FareCommissionEntries::findOrFail($id);
+        $fareHistory = AuditLog::with('user')
+            ->where('model_type', FareCommissionEntries::class)
             ->where('model_id', $id)
             ->orderBy('created_at', 'desc')
             ->get();
-    
+
+        $airlineHistory = collect();
+
+        if ($entry->airline_id) {
+            $airlineHistory = AuditLog::with('user')
+                ->where('model_type', AirlineCommission::class)
+                ->where('model_id', $entry->airline_id)
+                ->get();
+        }
+        $history = $fareHistory->concat($airlineHistory)->sortByDesc('created_at')->values();
+
         return response()->json([
             'success' => true,
             'history' => $history,

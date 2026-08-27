@@ -23,4 +23,9 @@ class AirlineCommission extends Model
         'au_commission' => 'float',
         'ex_au_commission' => 'float',
     ];
+
+    public function airline()
+    {
+        return $this->belongsTo(AirlineCommission::class,'airline_id');
+    }
 }
