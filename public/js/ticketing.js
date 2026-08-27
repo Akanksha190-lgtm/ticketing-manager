@@ -499,38 +499,28 @@ document.addEventListener('click', function(e) {
         row.dataset.destinationCode = destinationCode;
 
         // Make editable
-        row.cells[0].innerHTML =
-            `<input type="text" class="edit-input form-control form-control-sm" value="${airline}">`;
+        row.cells[0].innerHTML = `<input type="text" class="edit-input form-control form-control-sm" value="${airline}">`;
 
-        row.cells[1].innerHTML = `<div style="display:flex; gap:6px;"><input type="text" class="edit-input origin-edit form-control form-control-sm" value="${origin}" placeholder="Origin">
-                <input type="text" class="edit-input destination-edit form-control form-control-sm" value="${destination}" placeholder="Destination">
-                </div>`;
-        row.cells[2].innerHTML =
-            `<input type="text" class="edit-input form-control form-control-sm" value="${cabin}">`;
+        const routeValue = `${origin} (${originCode}) → ${destination} (${destinationCode})`;
 
-        row.cells[3].innerHTML =
-            `<input type="text" class="edit-input form-control form-control-sm" value="${source}">`;
+        row.cells[1].innerHTML = `<input type="text" class="edit-input route-edit form-control form-control-sm" value="${routeValue}" placeholder="Origin (CODE) → Destination (CODE)">`;
+        row.cells[2].innerHTML = `<input type="text" class="edit-input form-control form-control-sm" value="${cabin}">`;
 
-        row.cells[4].innerHTML =
-            `<input type="number" step="0.01" class="edit-input form-control form-control-sm" value="${published}">`;
+        row.cells[3].innerHTML = `<input type="text" class="edit-input form-control form-control-sm" value="${source}">`;
 
-        row.cells[5].innerHTML =
-            `<input type="number" step="0.1" class="edit-input form-control form-control-sm" value="${auComm}">`;
+        row.cells[4].innerHTML = `<input type="number" step="0.01" class="edit-input form-control form-control-sm" value="${published}">`;
 
-        row.cells[6].innerHTML =
-            `<input type="number" step="0.01" class="edit-input form-control form-control-sm" value="${net}">`;
+        row.cells[5].innerHTML = `<input type="number" step="0.1" class="edit-input form-control form-control-sm" value="${auComm}">`;
 
-        row.cells[7].innerHTML =
-            `<input type="number" step="0.01" class="edit-input form-control form-control-sm" value="${markup}">`;
+        row.cells[6].innerHTML = `<input type="number" step="0.01" class="edit-input form-control form-control-sm" value="${net}">`;
 
-        row.cells[8].innerHTML =
-            `<input type="number" step="0.01" class="edit-input form-control form-control-sm" value="${gross}">`;
+        row.cells[7].innerHTML = `<input type="number" step="0.01" class="edit-input form-control form-control-sm" value="${markup}">`;
 
-        row.cells[9].innerHTML =
-            `<input type="date" class="edit-input form-control form-control-sm" value="${validUntil}">`;
+        row.cells[8].innerHTML = `<input type="number" step="0.01" class="edit-input form-control form-control-sm" value="${gross}">`;
 
-        row.cells[10].innerHTML =
-            `<input type="text" class="edit-input form-control form-control-sm" value="${status}">`;
+        row.cells[9].innerHTML = `<input type="date" class="edit-input form-control form-control-sm" value="${validUntil}">`;
+
+        row.cells[10].innerHTML = `<input type="text" class="edit-input form-control form-control-sm" value="${status}">`;
 
 
         // Edit -> Save
@@ -571,39 +561,30 @@ document.addEventListener('click', function(e) {
             codeCell.innerHTML = row.dataset.originalCodeHtml;
         }
         // Restore original values
-        row.cells[0].innerHTML =
-            `<span class="airline-text">${row.dataset.airline}</span>`;
+        row.cells[0].innerHTML =`<span class="airline-text">${row.dataset.airline}</span>`;
 
         row.cells[1].innerHTML = `<strong class="route-text">${row.dataset.origin} (${originCode})  → ${row.dataset.destination} (${destinationCode})</strong>
         ${!originCode || !destinationCode? `<button type="button" class="btn btn-sm btn-outline-primary ms-2 add-route-code-btn" data-bs-toggle="modal" data-bs-target="#routeCodeModal${id}">Add Code</button>`: ''
         }`;
 
-        row.cells[2].innerHTML =
-            `<span class="cabin-text">${row.dataset.cabin}</span>`;
+        row.cells[2].innerHTML =`<span class="cabin-text">${row.dataset.cabin}</span>`;
 
-        row.cells[3].innerHTML =
-            `<span class="source-text">${row.dataset.source}</span>`;
+        row.cells[3].innerHTML =`<span class="source-text">${row.dataset.source}</span>`;
 
-        row.cells[4].innerHTML =
-            `<span class="published-text"><strong><span class="currency-text">${row.dataset.currency}</span> ${row.dataset.published}</span></strong`;
+        row.cells[4].innerHTML =`<span class="published-text"><strong><span class="currency-text">${row.dataset.currency}</span> ${row.dataset.published}</span></strong`;
 
-        row.cells[5].innerHTML =
-            `<span class="disc-comm-text"><strong>${row.dataset.auComm}</span>%</strong>`;
+        row.cells[5].innerHTML =`<span class="disc-comm-text"><strong>${row.dataset.auComm}</span>%</strong>`;
 
         row.cells[6].innerHTML =
             `<span class="net-text"><strong><span class="currency-text">${row.dataset.currency}</span> ${row.dataset.net}</span><strong>`;
 
-        row.cells[7].innerHTML =
-            `<span class="markup-text"><strong><span class="currency-text">${row.dataset.currency}</span> ${row.dataset.markup}</span><strong>`;
+        row.cells[7].innerHTML =`<span class="markup-text"><strong><span class="currency-text">${row.dataset.currency}</span> ${row.dataset.markup}</span><strong>`;
 
-        row.cells[8].innerHTML =
-            `<span class="gross-text"><strong><span class="currency-text">${row.dataset.currency}</span> ${row.dataset.gross}</span></strong>`;
+        row.cells[8].innerHTML =`<span class="gross-text"><strong><span class="currency-text">${row.dataset.currency}</span> ${row.dataset.gross}</span></strong>`;
 
-        row.cells[9].innerHTML =
-            `<span class="valid-until-value">${formatValidUntil(row.dataset.validUntil)}</span>`;
+        row.cells[9].innerHTML =`<span class="valid-until-value">${formatValidUntil(row.dataset.validUntil)}</span>`;
 
-        row.cells[10].innerHTML =
-            `<span class="status-text">${row.dataset.status}</span>`;
+        row.cells[10].innerHTML =`<span class="status-text">${row.dataset.status}</span>`;
 
 
         // Save -> Edit
@@ -633,17 +614,26 @@ document.addEventListener('click', function(e) {
         const inputs = row.querySelectorAll('.edit-input');
 
         const airline_id = inputs[0].value;
-        const origin = inputs[1].value;
-        const destination = inputs[2].value;
-        const cabin = inputs[3].value;
-        const source = inputs[4].value;
-        const published = inputs[5].value;
-        const auComm = inputs[6].value;
-        const net = inputs[7].value;
-        const markup = inputs[8].value;
-        const gross = inputs[9].value;
-        const validUntil = inputs[10].value;
-        const status = inputs[11].value;
+        const routeMatch = inputs[1].value.match(/^(.+?)\s*\(([^()]*)\)\s*→\s*(.+?)\s*\(([^()]*)\)$/);
+
+        if (!routeMatch) {
+            toast('Route format must be: Origin (CODE) → Destination (CODE)', 'danger');
+            return;
+        }
+
+        const origin = routeMatch[1].trim();
+        const originCode = routeMatch[2].trim();
+        const destination = routeMatch[3].trim();
+        const destinationCode = routeMatch[4].trim();
+        const cabin = inputs[2].value;
+        const source = inputs[3].value;
+        const published = inputs[4].value;
+        const auComm = inputs[5].value;
+        const net = inputs[6].value;
+        const markup = inputs[7].value;
+        const gross = inputs[8].value;
+        const validUntil = inputs[9].value;
+        const status = inputs[10].value;
 
 
         fetch('/fare-commission-entries/' + id, {
@@ -662,7 +652,9 @@ document.addEventListener('click', function(e) {
 
                 airline_id: airline_id,
                 origin: origin,
+                origin_code: originCode,
                 destination: destination,
+                destination_code: destinationCode,
                 cabin: cabin,
                 source: source,
                 published: published,
@@ -1047,7 +1039,7 @@ if (fareSearchForm) {
                         </td>
 
                         <td>
-                            ${entry.disc_comm ?? ''}%
+                            ${parseFloat(entry.airline?.au_commission ?? 0).toFixed(2)}%
                         </td>
 
                         <td>
@@ -1408,8 +1400,7 @@ document.addEventListener('submit', function (e) {
 
                 if (routeCell) {
 
-                    routeCell.innerHTML = `<strong class="route-text">${origin} (${originCode}) → ${destination} (${destinationCode})</strong>${!originCode || !destinationCode? `<button type="button"
-                            class="btn btn-sm btn-outline-primary ms-2 add-route-code-btn" data-bs-toggle="modal" data-bs-target="#routeCodeModal${row.id.replace('fare-entry-row-', '')}">Add Code</button>`: ''}`;
+                    routeCell.innerHTML = `<strong class="route-text">${origin} (${originCode}) → ${destination} (${destinationCode})</strong>${!originCode || !destinationCode? `<button type="button" class="btn btn-sm btn-outline-primary ms-2 add-route-code-btn" data-bs-toggle="modal" data-bs-target="#routeCodeModal${row.id.replace('fare-entry-row-', '')}">Add Code</button>`: ''}`;
                 }
             }
 

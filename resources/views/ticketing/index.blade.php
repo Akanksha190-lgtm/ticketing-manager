@@ -36,8 +36,8 @@
 
             <div><label>Airline</label><input type="text" id="f-airline" name="airline" placeholder="e.g. Air India" required></div>
             <div><label>Airline code</label><input type="text" id="f-airline-code"  name="airline_code_id" placeholder="e.g. AI" maxlength="3" style="text-transform:uppercase"></div>
-            <div><label>Origin</label><input type="text" id="f-origin" name="origin" placeholder="e.g. Melbourne (MEL)" required></div>
-            <div><label>Destination</label><input type="text" id="f-destination" name="destination" placeholder="e.g. Bengaluru (BLR)" required></div>
+            <div><label>Origin</label><input type="text" id="f-origin" name="origin" placeholder="e.g. Melbourne" required></div>
+            <div><label>Destination</label><input type="text" id="f-destination" name="destination" placeholder="e.g. Bengaluru" required></div>
 
             <div><label>Cabin</label>
                 <select id="f-cabin" name="cabin_id">

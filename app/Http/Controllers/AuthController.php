@@ -15,7 +15,7 @@ class AuthController extends Controller
     public function showLogin()
     {
         if (Auth::check()) {
-            return redirect()->route('ticketing.index');
+            return redirect()->route(Auth::user()->role === 'ticketing_manager' ? 'ticketing.index' : 'ticketing.team');
         }
         return view('auth.login');
     }
@@ -37,7 +37,8 @@ class AuthController extends Controller
         if ($user && $user->password === $credentials['password']) {
             Auth::login($user, $request->filled('remember'));
             $request->session()->regenerate();
-            return redirect()->route('ticketing.index')->with('success', 'Welcome back!');
+            $route = $user->role === 'ticketing_manager' ? 'ticketing.index' : 'ticketing.team';
+            return redirect()->route($route)->with('success', 'Welcome back!');
         }
 
         // Authentication failed
@@ -84,6 +85,6 @@ class AuthController extends Controller
         ]);
 
         Auth::login($user);
-        return redirect()->route('ticketing.index')->with('success', 'Registration successful!');
+        return redirect()->route('ticketing.team')->with('success', 'Registration successful!');
     }
 }

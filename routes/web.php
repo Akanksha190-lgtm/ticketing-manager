@@ -42,7 +42,7 @@ Route::middleware('auth')->group(function () {
 
     //------------------------ Ticketing Manager routes--------------------//
 
-    Route::middleware('role:ticketing_manager,ticketing_team')->group(function () {
+    Route::middleware('role:ticketing_manager')->group(function () {
         // Manager page
         Route::get('/ticketing', [App\Http\Controllers\FareCommissionEntriesController::class, 'index'])->name('ticketing.index');
 
@@ -51,7 +51,6 @@ Route::middleware('auth')->group(function () {
         Route::put('/fare-commission-entries/{id}',[App\Http\Controllers\FareCommissionEntriesController::class, 'update']
         )->name('fare-commission-entries.update');
         Route::delete('/fare-commission-entries/{id}',[App\Http\Controllers\FareCommissionEntriesController::class, 'destroy'])->name('fare-commission-entries.destroy');
-        Route::get('/fare-commission-entries/{id}/history',[App\Http\Controllers\FareCommissionEntriesController::class, 'history'])->name('fare-commission-entries.history');
 
         //air commission master routes
         Route::put('/airline-commissions/{id}',[App\Http\Controllers\CommissionMasterController::class, 'updateCommission'])->name('airline-commissions.update');
@@ -63,9 +62,8 @@ Route::middleware('auth')->group(function () {
 
     //------------------------ Ticketing Team routes--------------------//
     Route::middleware('role:ticketing_manager,ticketing_team')->group(function () {
-        Route::get('/ticketing-team',[App\Http\Controllers\FareCommissionEntriesController::class, 'index'])->name('ticketing.index');
-
         Route::get('/ticketing-team',[App\Http\Controllers\FareCommissionEntriesController::class, 'ticketingTeam'])->name('ticketing.team');
+        Route::get('/fare-commission-entries/{id}/history',[App\Http\Controllers\FareCommissionEntriesController::class, 'history'])->name('fare-commission-entries.history');
 
     });
 });

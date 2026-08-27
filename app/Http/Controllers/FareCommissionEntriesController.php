@@ -114,6 +114,12 @@ class FareCommissionEntriesController extends Controller
                 'destination_code' => null,
             ]);
         }
+
+        $route->update([
+            'origin_code' => strtoupper(trim($request->origin_code ?? '')),
+            'destination_code' => strtoupper(trim($request->destination_code ?? '')),
+        ]);
+
         $airline = AirlineCommission::where('airline',trim($request->airline_id))->first();
         $oldAuCommission = $airline?->au_commission;
         $hasAuCommission = $request->has('au_commission') && $request->input('au_commission') !== '';
@@ -191,15 +197,16 @@ class FareCommissionEntriesController extends Controller
 
     private function validatedData(Request $request): array
     {
+        $privateTourCode = FareSource::where('name', 'PRIVATE/TOUR CODE')->value('id');
         $data = $request->validate([
             'airline' => ['required', 'string', 'max:150'],
-            'airline_code_id' => ['required', 'string', 'max:10'],
+            // 'airline_code_id' => ['required', 'string', 'max:10'],
             'origin' => ['required', 'string', 'max:100'],
             'destination' => ['required', 'string', 'max:100'],
             'route_id' => ['nullable', 'integer', 'exists:routes,id'],
             'cabin_id' => ['required', 'integer', 'exists:cabins,id'],
             'source_id' => ['required', 'integer', 'exists:fare_sources,id'],
-            'tour_code' => ['nullable', 'string', 'max:100'],
+            'tour_code' => ["required_if:source_id,{$privateTourCode}", 'string', 'max:100'],
             'pcc_iata_ref' => ['nullable', 'string', 'max:100'],
             'published' => ['required', 'numeric', 'min:0'],
             'currency_id' => ['required', 'integer', 'exists:currencies,id'],
@@ -212,7 +219,14 @@ class FareCommissionEntriesController extends Controller
             'valid_until' => ['required', 'date'],
             'internal_notes' => ['nullable', 'string'],
             'booking_notes' => ['nullable', 'string'],
-        ]);
+        ],
+        [
+        // 'airline_code_id.required' => 'Airline is required.',
+        'cabin_id.required' => 'Cabin is required.',
+        'currency_id.required' => 'Currency is required.',
+        'tour_code.required_if' => 'Private fares need a tour code.',
+        ]
+        );
 
         foreach (['tour_code', 'pcc_iata_ref', 'internal_notes', 'booking_notes'] as $field) {
             $data[$field] = $data[$field] ?? '';
