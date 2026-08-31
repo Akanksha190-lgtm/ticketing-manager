@@ -184,8 +184,8 @@
                             <p class="hint">The commission level a ticket can be issued at for any carrier, independent of a specific fare deal above.</p>
                         </div>
                     </div>
-                    <form id="master-search-form" method="GET" action="{{ route('ticketing.index') }}" class="filter-bar">
-                        <input type="text" id="master-search" placeholder="Search airline or code…">
+                    <form id="master-search-form" method="GET" action="{{ route('ticketing.team') }}" class="filter-bar">
+                        <input type="text" id="master-search" name="master_search" value="{{ request('master_search') }}" placeholder="Search airline or code…">
                         <button type="submit" class="btn primary">Search</button>
                     </form>
                     <div class="table-scroll">

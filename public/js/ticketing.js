@@ -851,7 +851,8 @@ if (searchForm) {
         const url = new URL(searchForm.action, window.location.origin);
 
         if (search !== '') {
-            url.searchParams.set('search', search);
+            const parameter = url.pathname.endsWith('/ticketing-team') ? 'master_search' : 'search';
+            url.searchParams.set(parameter, search);
         }
 
         fetch(url.toString(), {

@@ -225,6 +225,7 @@ class FareCommissionEntriesController extends Controller
         'cabin_id.required' => 'Cabin is required.',
         'currency_id.required' => 'Currency is required.',
         'tour_code.required_if' => 'Private fares need a tour code.',
+        'source_id.required' => 'Source is required'
         ]
         );
 
@@ -239,6 +240,7 @@ class FareCommissionEntriesController extends Controller
     public function ticketingTeam(Request $request)
     {
         $search = $request->input('fare_search');
+        $masterSearch = trim($request->input('master_search', ''));
         $source = $request->input('source');
         $status = $request->input('status');
         
@@ -291,7 +293,19 @@ class FareCommissionEntriesController extends Controller
                 ->pluck('status');
             
         
-        $airlineCommissions = AirlineCommission::orderBy('id', 'asc')->get();
+        $airlineCommissionsQuery = AirlineCommission::query();
+
+        if ($masterSearch !== '') {
+            $exactCodeExists = AirlineCommission::where('code', $masterSearch)->exists();
+
+            if ($exactCodeExists) {
+                $airlineCommissionsQuery->where('code', $masterSearch);
+            } else {
+                $airlineCommissionsQuery->where('airline', 'LIKE', "%{$masterSearch}%");
+            }
+        }
+
+        $airlineCommissions = $airlineCommissionsQuery->orderBy('id', 'asc')->get();
         
         if ($request->expectsJson()) {
             return response()->json([
