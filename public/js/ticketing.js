@@ -23,9 +23,23 @@ if (topbarDate) {
 
 function daysUntil(dateStr) { return Math.round((new Date(dateStr) - TODAY) / 86400000); }
 function statusFor(f) { const d = daysUntil(f.validUntil); if (d < 0) return "expired"; if (d <= 7) return "soon"; return "active"; }
+function resolveStatusClass(statusText) {
+  const value = String(statusText || '').trim().toLowerCase();
+  if (!value) return 'active';
+  if (value.includes('active')) return 'active';
+  if (value.includes('expir')) return 'soon';
+  if (value.includes('expired')) return 'expired';
+  return value;
+}
 function statusBadge(status) {
+  const normalized = resolveStatusClass(status);
   const map = { active: "Active", soon: "Expiring soon", expired: "Expired" };
-  return `<span class="badge-status ${status}"><span class="dot"></span>${map[status]}</span>`;
+  return `<span class="badge-status ${normalized}"><span class="dot"></span>${map[normalized]}</span>`;
+}
+function renderStatusBadge(statusText) {
+  const text = String(statusText || '').trim();
+  const statusClass = resolveStatusClass(text);
+  return `<span class="status-text status-badge ${statusClass}"><span class="dot"></span>${text}</span>`;
 }
 function fmtDate(dateStr) { return new Date(dateStr).toLocaleDateString("en-AU", { day: "2-digit", month: "short", year: "numeric" }); }
 function money(n, currency) { return `${currency || "AUD"} ${Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`; }
@@ -36,8 +50,20 @@ function calcFare(f) {
   return { net, gross, margin: gross - net };
 }
 
+function normalizeSourceName(source) {
+  const value = String(source || '').trim().toLowerCase();
+  if (!value) return '';
+  if (value.includes('private')) return 'PRIVATE/TOUR CODE';
+  if (value.includes('iata') || value.includes('bsp')) return 'IATA/BSP PUBLISHED';
+  return value;
+}
+
 function sourceBadge(source) {
-  return source === "private" ? `<span class="badge-source private">Private / Tour Code</span>` : `<span class="badge-source bsp">IATA/BSP Published</span>`;
+  const normalized = String(source || '').trim().toLowerCase();
+  const isPrivate = normalized.includes('private');
+  const label = isPrivate ? 'Private / Tour Code' : 'IATA/BSP Published';
+  const klass = isPrivate ? 'private' : 'bsp';
+  return `<span class="source-text badge-source ${klass}">${label}</span>`;
 }
 
 function toast(message, type = 'success') {
@@ -450,6 +476,7 @@ document.addEventListener('click', function(e) {
 
         const cabin = row.querySelector('.cabin-text').innerText.trim();
         const source = row.querySelector('.source-text').innerText.trim();
+        row.dataset.source = normalizeSourceName(source);
 
         const published = row.querySelector('.published-text').innerText.replace(/[A-Z]{3}\s*/i, '').replace(/,/g, '').trim();
         const auComm = row.querySelector('.disc-comm-text').innerText.replace('%', '').trim();
@@ -569,7 +596,7 @@ document.addEventListener('click', function(e) {
 
         row.cells[2].innerHTML =`<span class="cabin-text">${row.dataset.cabin}</span>`;
 
-        row.cells[3].innerHTML =`<span class="source-text">${row.dataset.source}</span>`;
+        row.cells[3].innerHTML = sourceBadge(String(row.dataset.source || '').toLowerCase());
 
         row.cells[4].innerHTML =`<span class="published-text"><strong><span class="currency-text">${row.dataset.currency}</span> ${row.dataset.published}</span></strong`;
 
@@ -584,7 +611,7 @@ document.addEventListener('click', function(e) {
 
         row.cells[9].innerHTML =`<span class="valid-until-value">${formatValidUntil(row.dataset.validUntil)}</span>`;
 
-        row.cells[10].innerHTML =`<span class="status-text">${row.dataset.status}</span>`;
+        row.cells[10].innerHTML = renderStatusBadge(row.dataset.status);
 
 
         // Save -> Edit
@@ -626,7 +653,7 @@ document.addEventListener('click', function(e) {
         const destination = routeMatch[3].trim();
         const destinationCode = routeMatch[4].trim();
         const cabin = inputs[2].value;
-        const source = inputs[3].value;
+        const source = normalizeSourceName(inputs[3].value);
         const published = inputs[4].value;
         const auComm = inputs[5].value;
         const net = inputs[6].value;
@@ -681,6 +708,14 @@ document.addEventListener('click', function(e) {
 
             if (data.success) 
             {
+                const row = document.getElementById('fare-entry-row-' + id);
+                if (row) {
+                    row.dataset.status = status;
+                    row.dataset.source = source;
+                    row.cells[3].innerHTML = sourceBadge(source);
+                    row.cells[10].innerHTML = renderStatusBadge(status);
+                }
+
                 toast(data.message || 'Updated successfully.','success');
                 
                 setTimeout(() => {

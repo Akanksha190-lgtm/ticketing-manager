@@ -148,14 +148,66 @@
   .muted-cell { color: var(--text-muted); font-size: 11.5px; }
   .empty-row td { text-align: center; color: var(--text-muted); padding: 34px 20px; font-size: 13px; }
 
-  .badge-status { display: inline-flex; align-items: center; gap: 5px; padding: 3.5px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
-  .badge-status.active  { background: var(--status-good-bg); color: #086b08; }
-  .badge-status.soon    { background: var(--status-warning-bg); color: #8a5a00; }
-  .badge-status.expired { background: var(--status-muted-bg); color: var(--text-muted); }
-  .badge-status .dot { width: 7px; height: 7px; border-radius: 50%; }
-  .badge-status.active .dot  { background: var(--status-good); }
-  .badge-status.soon .dot    { background: var(--status-warning); }
-  .badge-status.expired .dot { background: var(--text-muted); }
+  .badge-status,
+  .status-badge,
+  .status-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+  .badge-status.active,
+  .status-badge.active,
+  .status-text.active {
+    background: var(--status-good-bg);
+    color: #0b7a19;
+  }
+  .badge-status.soon,
+  .badge-status.expiring-soon,
+  .status-badge.soon,
+  .status-badge.expiring-soon,
+  .status-text.soon,
+  .status-text.expiring-soon {
+    background: var(--status-warning-bg);
+    color: #8a5a00;
+  }
+  .badge-status.expired,
+  .status-badge.expired,
+  .status-text.expired {
+    background: var(--status-muted-bg);
+    color: #5f6978;
+  }
+  .badge-status .dot,
+  .status-badge .dot,
+  .status-text .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .badge-status.active .dot,
+  .status-badge.active .dot,
+  .status-text.active .dot {
+    background: var(--status-good);
+  }
+  .badge-status.soon .dot,
+  .badge-status.expiring-soon .dot,
+  .status-badge.soon .dot,
+  .status-badge.expiring-soon .dot,
+  .status-text.soon .dot,
+  .status-text.expiring-soon .dot {
+    background: var(--status-warning);
+  }
+  .badge-status.expired .dot,
+  .status-badge.expired .dot,
+  .status-text.expired .dot {
+    background: #7d8794;
+  }
 
   .badge-source { font-size: 10.5px; font-weight: 800; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.2px; }
   .badge-source.private { background: var(--violet-soft); color: var(--violet); }

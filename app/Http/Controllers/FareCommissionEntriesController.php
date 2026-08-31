@@ -335,7 +335,8 @@ class FareCommissionEntriesController extends Controller
 
     public function history($id)
     {
-        $entry = FareCommissionEntries::findOrFail($id);
+        $entry = FareCommissionEntries::with('airline')->findOrFail($id);
+
         $fareHistory = AuditLog::with('user')
             ->where('model_type', FareCommissionEntries::class)
             ->where('model_id', $id)
@@ -348,9 +349,33 @@ class FareCommissionEntriesController extends Controller
             $airlineHistory = AuditLog::with('user')
                 ->where('model_type', AirlineCommission::class)
                 ->where('model_id', $entry->airline_id)
+                ->orderBy('created_at', 'desc')
                 ->get();
         }
-        $history = $fareHistory->concat($airlineHistory)->sortByDesc('created_at')->values();
+
+        $history = $fareHistory->merge($airlineHistory)
+            ->sortByDesc('created_at')
+            ->values()
+            ->filter(function ($log) use ($entry, $fareHistory) {
+                if ($log['model_type'] === FareCommissionEntries::class && $log['model_id'] == $entry->id) {
+                    return true;
+                }
+
+                if ($log['model_type'] === AirlineCommission::class && $log['model_id'] == $entry->airline_id) {
+                    $isDuplicateSameTimestamp = $fareHistory->contains(function ($fareLog) use ($log, $entry) {
+                        return $fareLog['model_type'] === FareCommissionEntries::class
+                            && $fareLog['model_id'] == $entry->id
+                            && isset($fareLog['created_at'])
+                            && isset($log['created_at'])
+                            && $fareLog['created_at'] == $log['created_at'];
+                    });
+
+                    return !$isDuplicateSameTimestamp;
+                }
+
+                return true;
+            })
+            ->values();
 
         return response()->json([
             'success' => true,

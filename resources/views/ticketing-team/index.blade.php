@@ -102,8 +102,12 @@
                                         </td>
                                         {{-- Source --}}
                                         <td>
-                                            <span class="source-text">
-                                                {{ $fare_entry->fareSource->name ?? '-' }}
+                                            @php
+                                                $sourceName = $fare_entry->fareSource->name ?? '-';
+                                                $sourceClass = str_contains(strtolower($sourceName), 'private') ? 'private' : 'bsp';
+                                            @endphp
+                                            <span class="source-text badge-source {{ $sourceClass }}">
+                                                {{ $sourceName }}
                                             </span>
                                         </td>
                                         {{-- Tour Code --}}
@@ -159,8 +163,8 @@
 
                                         {{-- Status --}}
                                         <td>
-                                            <span class="status-text">
-                                                {{ $fare_entry->status }}
+                                            <span class="status-text status-badge {{ strtolower(str_replace(' ', '-', $fare_entry->status)) }}">
+                                                <span class="dot"></span>{{ $fare_entry->status }}
                                             </span>
                                         </td>
 

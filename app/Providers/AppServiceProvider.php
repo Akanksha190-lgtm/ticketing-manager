@@ -25,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         FareCommissionEntries::observe(FareCommissionEntriesObserver::class);
+        AirlineCommission::observe(AirlineCommissionObserver::class);
 
         View::composer('layouts.navbar', function ($view) {
 
