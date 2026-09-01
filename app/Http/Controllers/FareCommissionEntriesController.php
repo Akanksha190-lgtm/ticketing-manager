@@ -239,17 +239,15 @@ class FareCommissionEntriesController extends Controller
     //for ticketing team data 
     public function ticketingTeam(Request $request)
     {
-        $search = $request->input('fare_search');
+        $search = trim((string) ($request->input('fare_search', $request->input('search', ''))));
         $masterSearch = trim($request->input('master_search', ''));
         $source = $request->input('source');
         $status = $request->input('status');
         $sort = $request->input('sort', 'valid_until_asc');
         
-        $farecomissentryQuery = FareCommissionEntries::with('route','fareSource','cabin','airline');
+        $farecomissentryQuery = FareCommissionEntries::with('route','fareSource','cabin','airline','currency');
 
-        if ($search) {
-            $search = trim($search);
-
+        if ($search !== '') {
             $farecomissentryQuery->where(function ($query) use ($search) {
 
                 // Airline master table
@@ -260,7 +258,9 @@ class FareCommissionEntriesController extends Controller
                 // Route table
                 ->orWhereHas('route', function ($q) use ($search) {
                     $q->where('origin', 'LIKE', "%{$search}%")
-                    ->orWhere('destination', 'LIKE', "%{$search}%");
+                    ->orWhere('destination', 'LIKE', "%{$search}%")
+                    ->orWhere('origin_code', 'LIKE', "%{$search}%")
+                    ->orWhere('destination_code', 'LIKE', "%{$search}%");
                 });
 
             });

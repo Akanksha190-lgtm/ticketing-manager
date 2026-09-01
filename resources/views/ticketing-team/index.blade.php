@@ -96,7 +96,7 @@
                                             </span>
                                         </td>
                                         {{-- Route --}}
-                                        <td>
+                                        <td class="text-nowrap">
                                             @if($fare_entry->route)
                                                 <strong>
                                                     {{ $fare_entry->route->origin }}
@@ -116,7 +116,7 @@
                                             </span>
                                         </td>
                                         {{-- Source --}}
-                                        <td>
+                                        <td class="text-nowrap">
                                             @php
                                                 $sourceName = $fare_entry->fareSource->name ?? '-';
                                                 $sourceClass = str_contains(strtolower($sourceName), 'private') ? 'private' : 'bsp';
@@ -132,41 +132,41 @@
                                             </span>
                                         </td>
                                         {{-- Published --}}
-                                        <td>
-                                            <span class="published-text">
-                                            AUD {{ number_format($fare_entry->published, 2) }}
-                                            </span>
+                                        <td class="text-nowrap">
+                                            <span class="published-text"><strong>
+                                            {{ $fare_entry->currency->code ?? '-' }} {{ number_format($fare_entry->published, 2) }}
+                                            </strong></span>
                                         </td>
                                         {{-- Discount / Commission --}}
                                         <td>
-                                            <span class="disc-comm-text">
+                                            <span class="disc-comm-text"><strong>
                                                 {{ number_format($fare_entry->airline->au_commission ?? 0, 1) }}%
-                                            </span>
+                                            </strong></span>
                                         </td>
 
                                         {{-- Net --}}
-                                        <td>
-                                            <span class="net-text">
-                                                AUD {{ number_format($fare_entry->net, 2) }}
-                                            </span>
+                                        <td class="text-nowrap">
+                                            <span class="net-text"><strong>
+                                                {{ $fare_entry->currency->code ?? '-' }} {{ number_format($fare_entry->net, 2) }}
+                                            </strong></span>
                                         </td>
                                         </td>
                         
                                         {{-- Gross --}}
-                                        <td>
-                                            <span class="gross-text">
-                                                AUD {{ number_format($fare_entry->gross, 2) }}
-                                            </span>
+                                        <td class="text-nowrap">
+                                            <span class="gross-text"><strong>
+                                                {{ $fare_entry->currency->code ?? '-' }} {{ number_format($fare_entry->gross, 2) }}
+                                            </strong></span>
                                         </td>
                                         {{-- Margin --}}
-                                        <td>
-                                            <span class="markup-text">
-                                                AUD {{ number_format($fare_entry->markup, 2) }}
-                                            </span>
+                                        <td class="text-nowrap">
+                                            <span class="markup-text"><strong>
+                                                {{ $fare_entry->currency->code ?? '-' }} {{ number_format($fare_entry->markup, 2) }}
+                                            </strong></span>
                                         </td>
 
                                         {{-- Valid Until --}}
-                                        <td>
+                                        <td class="text-nowrap">
                                             <span class="valid-until-text">
                                             {{ $fare_entry->valid_until->format('d M Y') }}
                                             </span>

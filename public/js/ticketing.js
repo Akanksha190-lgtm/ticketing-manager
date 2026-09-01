@@ -1048,6 +1048,7 @@ if (fareSearchForm) {
             data.farecomissentry.forEach(entry => {
                 const net = parseFloat(entry.net ?? 0);
                 const gross = parseFloat(entry.gross ?? 0);
+                const currencyCode = entry.currency?.code ?? '-';
 
                 const margin = gross - net;
                 tbody.innerHTML += `
@@ -1057,7 +1058,7 @@ if (fareSearchForm) {
                             ${entry.airline?.airline ?? ''}
                         </td>
 
-                        <td>
+                        <td class="text-nowrap">
                             <strong>
                                 ${entry.route ? `${entry.route.origin ?? ''} (${entry.route.origin_code ?? ''}) → ${entry.route.destination ?? ''} (${entry.route.destination_code ?? ''})` : `${entry.origin ?? ''} → ${entry.destination ?? ''}`
                                 }
@@ -1068,8 +1069,8 @@ if (fareSearchForm) {
                             ${entry.cabin ? entry.cabin.name : '' }
                         </td>
 
-                        <td>
-                            ${sourceBadge(entry.fare_source?.name ?? '')}
+                        <td class="text-nowrap">
+                            ${sourceBadge(entry.fare_source?.name ?? entry.fareSource?.name ?? '')}
                         </td>
 
                         <td>
@@ -1077,27 +1078,37 @@ if (fareSearchForm) {
                             ${entry.pcc_iata_ref ?? ''}
                         </td>
 
-                        <td>
-                            ${entry.published ?? ''}
+                        <td class="text-nowrap">
+                            <strong>
+                                ${currencyCode} ${parseFloat(entry.published ?? 0).toFixed(2)}
+                            </strong>
                         </td>
 
                         <td>
-                            ${parseFloat(entry.airline?.au_commission ?? 0).toFixed(2)}%
+                            <strong>
+                                ${parseFloat(entry.airline?.au_commission ?? 0).toFixed(2)}%
+                            </strong>
                         </td>
 
-                        <td>
-                            ${entry.net ?? ''}
+                        <td class="text-nowrap">
+                            <strong>
+                                ${currencyCode} ${net.toFixed(2)}
+                            </strong>
                         </td>
 
-                        <td>
-                            ${entry.gross ?? ''}
+                        <td class="text-nowrap">
+                            <strong>
+                                ${currencyCode} ${gross.toFixed(2)}
+                            </strong>
                         </td>
 
-                        <td>
-                            ${margin.toFixed(2)}
+                        <td class="text-nowrap">
+                            <strong>
+                                ${currencyCode} ${margin.toFixed(2)}
+                            </strong>
                         </td>
 
-                        <td>
+                        <td class="text-nowrap">
                             ${formatValidUntil(entry.valid_until)}
                         </td>
 
