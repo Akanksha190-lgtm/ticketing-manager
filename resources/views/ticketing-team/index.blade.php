@@ -59,7 +59,22 @@
                             @endforeach
                         </select>
                         {{-- Sort --}}
-                        <!-- <select name="sort"> -->
+                        <select id="fare-sort" name="sort">
+                            <option value="valid_until_asc"
+                                {{ request('sort', 'valid_until_asc') == 'valid_until_asc' ? 'selected' : '' }}>
+                                Sort: Expiring soonest
+                            </option>
+
+                            <option value="commission_desc"
+                                {{ request('sort') == 'commission_desc' ? 'selected' : '' }}>
+                                Sort: Commission % high → low
+                            </option>
+
+                            <option value="margin_desc"
+                                {{ request('sort') == 'margin_desc' ? 'selected' : '' }}>
+                                Sort: Margin high → low
+                            </option>
+                        </select>
                         <button type="submit" class="btn primary">Search</button>
                     </form>
 

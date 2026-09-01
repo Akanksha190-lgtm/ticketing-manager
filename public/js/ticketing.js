@@ -26,9 +26,9 @@ function statusFor(f) { const d = daysUntil(f.validUntil); if (d < 0) return "ex
 function resolveStatusClass(statusText) {
   const value = String(statusText || '').trim().toLowerCase();
   if (!value) return 'active';
+  if (value.includes('expired')) return 'expired';
   if (value.includes('active')) return 'active';
   if (value.includes('expir')) return 'soon';
-  if (value.includes('expired')) return 'expired';
   return value;
 }
 function statusBadge(status) {
@@ -997,6 +997,13 @@ if (fareSearchForm) {
             url.searchParams.set('status', statusSelect.value);
         }
 
+        // Sort
+        const sortSelect = document.getElementById('fare-sort');
+
+        if (sortSelect && sortSelect.value !== '') {
+            url.searchParams.set('sort', sortSelect.value);
+        }
+
         url.searchParams.set('type', 'fare');
 
         fetch(url.toString(), {
@@ -1062,7 +1069,7 @@ if (fareSearchForm) {
                         </td>
 
                         <td>
-                            ${entry.fare_source ? entry.fare_source.name : '' }
+                            ${sourceBadge(entry.fare_source?.name ?? '')}
                         </td>
 
                         <td>
@@ -1095,7 +1102,7 @@ if (fareSearchForm) {
                         </td>
 
                         <td>
-                            ${entry.status ?? ''}
+                            ${renderStatusBadge(entry.status ?? '')}
                         </td>
 
                     </tr>

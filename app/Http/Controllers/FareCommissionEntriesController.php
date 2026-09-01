@@ -243,6 +243,7 @@ class FareCommissionEntriesController extends Controller
         $masterSearch = trim($request->input('master_search', ''));
         $source = $request->input('source');
         $status = $request->input('status');
+        $sort = $request->input('sort', 'valid_until_asc');
         
         $farecomissentryQuery = FareCommissionEntries::with('route','fareSource','cabin','airline');
 
@@ -276,7 +277,22 @@ class FareCommissionEntriesController extends Controller
         if ($status) {
             $farecomissentryQuery->where('status', $status);
         }
-        $farecomissentry = $farecomissentryQuery->orderBy('id', 'asc')->get();
+        $farecomissentry = $farecomissentryQuery->get();
+
+        //sort filter
+        switch ($sort) {
+            case 'commission_desc': $farecomissentry = $farecomissentry->sortByDesc(function ($entry) {
+                        return $entry->airline?->au_commission ?? 0;
+                    })->values();
+            break;
+            case 'margin_desc':$farecomissentry = $farecomissentry->sortByDesc(function ($entry) {
+                        return ($entry->gross ?? 0) - ($entry->net ?? 0);
+                    })->values();
+            break;
+            case 'valid_until_asc':
+            default: $farecomissentry = $farecomissentry->sortBy('valid_until')->values();
+            break;
+        }
 
         $activeFares = FareCommissionEntries::where('status', 'Active')->count();
 
