@@ -24,46 +24,49 @@ if (topbarDate) {
 function daysUntil(dateStr) { return Math.round((new Date(dateStr) - TODAY) / 86400000); }
 function statusFor(f) { const d = daysUntil(f.validUntil); if (d < 0) return "expired"; if (d <= 7) return "soon"; return "active"; }
 function resolveStatusClass(statusText) {
-  const value = String(statusText || '').trim().toLowerCase();
-  if (!value) return 'active';
-  if (value.includes('expired')) return 'expired';
-  if (value.includes('active')) return 'active';
-  if (value.includes('expir')) return 'soon';
-  return value;
+    const value = String(statusText || '').trim().toLowerCase();
+    if (!value) return 'active';
+    if (value.includes('expired')) return 'expired';
+    if (value.includes('active')) return 'active';
+    if (value.includes('expir')) return 'soon';
+    return value;
 }
 function statusBadge(status) {
-  const normalized = resolveStatusClass(status);
-  const map = { active: "Active", soon: "Expiring soon", expired: "Expired" };
-  return `<span class="badge-status ${normalized}"><span class="dot"></span>${map[normalized]}</span>`;
+    const normalized = resolveStatusClass(status);
+    const map = { active: "Active", soon: "Expiring soon", expired: "Expired" };
+    return `<span class="badge-status ${normalized}"><span class="dot"></span>${map[normalized]}</span>`;
 }
 function renderStatusBadge(statusText) {
-  const text = String(statusText || '').trim();
-  const statusClass = resolveStatusClass(text);
-  return `<span class="status-text status-badge ${statusClass}"><span class="dot"></span>${text}</span>`;
+    const text = String(statusText || '').trim();
+    const statusClass = resolveStatusClass(text);
+    return `<span class="status-text status-badge ${statusClass}"><span class="dot"></span>${text}</span>`;
 }
 function fmtDate(dateStr) { return new Date(dateStr).toLocaleDateString("en-AU", { day: "2-digit", month: "short", year: "numeric" }); }
 function money(n, currency) { return `${currency || "AUD"} ${Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`; }
 
 function calcFare(f) {
-  const net = f.published * (1 - f.commissionPct / 100);
-  const gross = net + f.markup;
-  return { net, gross, margin: gross - net };
+    const published = Number(f.published) || 0;
+    const commissionPct = Number(f.commissionPct) || 0;
+    const markup = Number(f.markup) || 0;
+    const net = commissionPct > 0 ? (published * (commissionPct / 100)) * markup : published;
+    const gross = net + markup;
+    return { net, gross, margin: gross - net };
 }
 
 function normalizeSourceName(source) {
-  const value = String(source || '').trim().toLowerCase();
-  if (!value) return '';
-  if (value.includes('private')) return 'PRIVATE/TOUR CODE';
-  if (value.includes('iata') || value.includes('bsp')) return 'IATA/BSP PUBLISHED';
-  return value;
+    const value = String(source || '').trim().toLowerCase();
+    if (!value) return '';
+    if (value.includes('private')) return 'PRIVATE/TOUR CODE';
+    if (value.includes('iata') || value.includes('bsp')) return 'IATA/BSP PUBLISHED';
+    return value;
 }
 
 function sourceBadge(source) {
-  const normalized = String(source || '').trim().toLowerCase();
-  const isPrivate = normalized.includes('private');
-  const label = isPrivate ? 'Private / Tour Code' : 'IATA/BSP Published';
-  const klass = isPrivate ? 'private' : 'bsp';
-  return `<span class="source-text badge-source ${klass}">${label}</span>`;
+    const normalized = String(source || '').trim().toLowerCase();
+    const isPrivate = normalized.includes('private');
+    const label = isPrivate ? 'Private / Tour Code' : 'IATA/BSP Published';
+    const klass = isPrivate ? 'private' : 'bsp';
+    return `<span class="source-text badge-source ${klass}">${label}</span>`;
 }
 
 function toast(message, type = 'success') {
@@ -111,15 +114,22 @@ function toast(message, type = 'success') {
 }
 
 function updateCalcPreview() {
-  const published = Number(document.getElementById("f-published").value) || 0;
-  const commissionPct = Number(document.getElementById("f-commission-pct").value) || 0;
-  const markup = Number(document.getElementById("f-markup").value) || 0;
-  const currency = document.getElementById("f-currency").value;
-  const net = published * (1 - commissionPct / 100);
-  const gross = net + markup;
-  document.getElementById("preview-net").textContent = money(net, currency);
-  document.getElementById("preview-gross").textContent = money(gross, currency);
-  document.getElementById("preview-margin").textContent = money(gross - net, currency);
+    const published = Number(document.getElementById("f-published").value) || 0;
+    const commissionPct = Number(document.getElementById("f-commission-pct").value) || 0;
+    const markup = Number(document.getElementById("f-markup").value) || 0;
+    const currencySelect = document.getElementById("f-currency");
+    let currency = "AUD";
+    if (currencySelect && currencySelect.selectedIndex >= 0) {
+        const selectedOption = currencySelect.options[currencySelect.selectedIndex];
+        if (selectedOption && selectedOption.value) {
+            currency = selectedOption.dataset.code || selectedOption.text.trim();
+        }
+    }
+    const net = commissionPct > 0 ? (published * (commissionPct / 100)) * markup : published;
+    const gross = net + markup;
+    document.getElementById("preview-net").textContent = money(net, currency);
+    document.getElementById("preview-gross").textContent = money(gross, currency);
+    document.getElementById("preview-margin").textContent = money(gross - net, currency);
 }
 
 ["f-published", "f-commission-pct", "f-markup", "f-currency"]
@@ -128,54 +138,54 @@ function updateCalcPreview() {
 
         if (element) {
             element.addEventListener("input", updateCalcPreview);
+            element.addEventListener("change", updateCalcPreview);
         }
     });
 
 function loadFareIntoForm(id) {
-  const f = mockFares.find(x => x.id == id);
-  if (!f) return;
-  document.getElementById("fare-id").value = f.id;
-  document.getElementById("f-airline").value = f.airline;
-  document.getElementById("f-airline-code").value = f.airlineCode;
-  document.getElementById("f-origin").value = f.origin;
-  document.getElementById("f-destination").value = f.destination;
-  document.getElementById("f-cabin").value = f.cabin;
-  document.getElementById("f-source").value = f.source;
-  document.getElementById("f-tourcode").value = f.tourCode;
-  document.getElementById("f-pcc").value = f.pcc;
-  document.getElementById("f-published").value = f.published;
-  document.getElementById("f-currency").value = f.currency;
-  document.getElementById("f-commission-pct").value = f.commissionPct;
-  document.getElementById("f-markup").value = f.markup;
-  document.getElementById("f-travel-from").value = f.travelFrom;
-  document.getElementById("f-travel-to").value = f.travelTo;
-  document.getElementById("f-valid-until").value = f.validUntil;
-  document.getElementById("f-internal-notes").value = f.internalNotes || "";
-  document.getElementById("f-customer-notes").value = f.customerNotes || "";
-  document.getElementById("fare-form-submit").textContent = "Save changes";
-  document.getElementById("fare-form-cancel").style.display = "inline-flex";
-  document.getElementById("form-mode-tag").textContent = "Editing #" + f.id;
-  updateCalcPreview();
-  document.getElementById("fare-form").scrollIntoView({ behavior: "smooth", block: "start" });
+    const f = mockFares.find(x => x.id == id);
+    if (!f) return;
+    document.getElementById("fare-id").value = f.id;
+    document.getElementById("f-airline").value = f.airline;
+    document.getElementById("f-airline-code").value = f.airlineCode;
+    document.getElementById("f-origin").value = f.origin;
+    document.getElementById("f-destination").value = f.destination;
+    document.getElementById("f-cabin").value = f.cabin;
+    document.getElementById("f-source").value = f.source;
+    document.getElementById("f-tourcode").value = f.tourCode;
+    document.getElementById("f-pcc").value = f.pcc;
+    document.getElementById("f-published").value = f.published;
+    document.getElementById("f-currency").value = f.currency;
+    document.getElementById("f-commission-pct").value = f.commissionPct;
+    document.getElementById("f-markup").value = f.markup;
+    document.getElementById("f-travel-from").value = f.travelFrom;
+    document.getElementById("f-travel-to").value = f.travelTo;
+    document.getElementById("f-valid-until").value = f.validUntil;
+    document.getElementById("f-internal-notes").value = f.internalNotes || "";
+    document.getElementById("f-customer-notes").value = f.customerNotes || "";
+    document.getElementById("fare-form-submit").textContent = "Save changes";
+    document.getElementById("fare-form-cancel").style.display = "inline-flex";
+    document.getElementById("form-mode-tag").textContent = "Editing #" + f.id;
+    updateCalcPreview();
+    document.getElementById("fare-form").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function resetForm() {
-  document.getElementById("fare-form").reset();
-  document.getElementById("fare-id").value = "";
-  document.getElementById("f-currency").value = "AUD";
-  document.getElementById("fare-form-submit").textContent = "Add fare";
-  document.getElementById("fare-form-cancel").style.display = "none";
-  document.getElementById("form-mode-tag").textContent = "New";
-  updateCalcPreview();
+    document.getElementById("fare-form").reset();
+    document.getElementById("fare-id").value = "";
+    document.getElementById("fare-form-submit").textContent = "Add fare";
+    document.getElementById("fare-form-cancel").style.display = "none";
+    document.getElementById("form-mode-tag").textContent = "New";
+    updateCalcPreview();
 }
 
 function deleteFare(id) {
-  const f = mockFares.find(x => x.id == id);
-  if (!f) return;
-  if (!confirm(`Delete the ${f.airline} ${f.origin} → ${f.destination} fare? This can't be undone.`)) return;
-  mockFares = mockFares.filter(x => x.id != id);
-  toast(`Fare deleted — ${f.airline} ${f.origin} → ${f.destination}`, "danger");
-  refreshAll();
+    const f = mockFares.find(x => x.id == id);
+    if (!f) return;
+    if (!confirm(`Delete the ${f.airline} ${f.origin} → ${f.destination} fare? This can't be undone.`)) return;
+    mockFares = mockFares.filter(x => x.id != id);
+    toast(`Fare deleted — ${f.airline} ${f.origin} → ${f.destination}`, "danger");
+    refreshAll();
 }
 //to format date 
 function formatValidUntil(dateString) {
@@ -225,46 +235,46 @@ if (fareForm) {
             },
             body: formData
         })
-        .then(async response => {
+            .then(async response => {
 
-            const data = await response.json();
+                const data = await response.json();
 
-            console.log('CREATE RESPONSE:', data);
+                console.log('CREATE RESPONSE:', data);
 
-            if (!response.ok) {
-                throw new Error(data.message || 'Failed to create fare');
-            }
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to create fare');
+                }
 
-            return data;
-        })
-        .then(data => {
+                return data;
+            })
+            .then(data => {
 
-            if (data.success) {
+                if (data.success) {
 
-                toast(data.message || 'Created successfully.','success');
+                    toast(data.message || 'Created successfully.', 'success');
 
-                // form close/reset
-                fareForm.reset();
-               
-                setTimeout(() => {
-                    location.reload();
-                }, 1000);
-            }
+                    // form close/reset
+                    fareForm.reset();
 
-        })
-        .catch(error => {
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                }
 
-            console.error('Create fare error:', error);
+            })
+            .catch(error => {
 
-            toast(
-                error.message || 'Something went wrong.',
-                'danger'
-            );
-        });
+                console.error('Create fare error:', error);
+
+                toast(
+                    error.message || 'Something went wrong.',
+                    'danger'
+                );
+            });
     });
 }
 //edit -cancel -save buttons
-document.addEventListener('click', function(e) {
+document.addEventListener('click', function (e) {
 
     const buttonTarget = e.target.closest('button');
 
@@ -408,45 +418,44 @@ document.addEventListener('click', function(e) {
 
         })
 
-        .then(response => {
+            .then(response => {
 
-            if (!response.ok) {
-                throw new Error('Update failed');
-            }
+                if (!response.ok) {
+                    throw new Error('Update failed');
+                }
 
-            return response.json();
-        })
-        .then(data => {
+                return response.json();
+            })
+            .then(data => {
 
-            console.log('Updated successfully');
+                console.log('Updated successfully');
 
-           if (data.success) 
-            {
-                toast(data.message || 'Updated successfully.','success');
+                if (data.success) {
+                    toast(data.message || 'Updated successfully.', 'success');
 
-                setTimeout(() => {
-                    location.reload();
-                }, 1000);
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
 
-            } else {
+                } else {
 
-                toast(data.message || 'Update failed.','danger');
+                    toast(data.message || 'Update failed.', 'danger');
 
-            }
+                }
 
-        })
-        .catch(error => {
+            })
+            .catch(error => {
 
-            console.error(error);
+                console.error(error);
 
-        });
+            });
 
     }
 
 });
 
 //----------------- Fare entry table edit/save/cancel -----------------
-document.addEventListener('click', function(e) {
+document.addEventListener('click', function (e) {
 
     const buttonTarget = e.target.closest('button');
 
@@ -501,12 +510,12 @@ document.addEventListener('click', function(e) {
             else {
                 const [day, monthName, year] = text.split(' ');
 
-                const months = {Jan: '01',Feb: '02',Mar: '03',Apr: '04',May: '05',Jun: '06',Jul: '07',Aug: '08',Sep: '09',Oct: '10',Nov: '11',Dec: '12'};
+                const months = { Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12' };
 
-                validUntil =`${year}-${months[monthName]}-${day.padStart(2, '0')}`;
+                validUntil = `${year}-${months[monthName]}-${day.padStart(2, '0')}`;
             }
         }
-        const status =row.querySelector('.status-text').innerText.trim();
+        const status = row.querySelector('.status-text').innerText.trim();
         const currency = row.dataset.currency;
         // Save original values
         row.dataset.airline = airline;
@@ -577,7 +586,7 @@ document.addEventListener('click', function(e) {
         const button = buttonTarget;
         const id = button.dataset.id;
 
-        const row =document.getElementById('fare-entry-row-' + id);
+        const row = document.getElementById('fare-entry-row-' + id);
 
         const validUntil = row.dataset.validUntil;
         const codeCell = row.querySelector('.route-code-cell');
@@ -588,28 +597,28 @@ document.addEventListener('click', function(e) {
             codeCell.innerHTML = row.dataset.originalCodeHtml;
         }
         // Restore original values
-        row.cells[0].innerHTML =`<span class="airline-text">${row.dataset.airline}</span>`;
+        row.cells[0].innerHTML = `<span class="airline-text">${row.dataset.airline}</span>`;
 
         row.cells[1].innerHTML = `<strong class="route-text">${row.dataset.origin} (${originCode})  → ${row.dataset.destination} (${destinationCode})</strong>
-        ${!originCode || !destinationCode? `<button type="button" class="btn btn-sm btn-outline-primary ms-2 add-route-code-btn" data-bs-toggle="modal" data-bs-target="#routeCodeModal${id}">Add Code</button>`: ''
-        }`;
+        ${!originCode || !destinationCode ? `<button type="button" class="btn btn-sm btn-outline-primary ms-2 add-route-code-btn" data-bs-toggle="modal" data-bs-target="#routeCodeModal${id}">Add Code</button>` : ''
+            }`;
 
-        row.cells[2].innerHTML =`<span class="cabin-text">${row.dataset.cabin}</span>`;
+        row.cells[2].innerHTML = `<span class="cabin-text">${row.dataset.cabin}</span>`;
 
         row.cells[3].innerHTML = sourceBadge(String(row.dataset.source || '').toLowerCase());
 
-        row.cells[4].innerHTML =`<span class="published-text"><strong><span class="currency-text">${row.dataset.currency}</span> ${row.dataset.published}</span></strong`;
+        row.cells[4].innerHTML = `<span class="published-text"><strong><span class="currency-text">${row.dataset.currency}</span> ${row.dataset.published}</span></strong`;
 
-        row.cells[5].innerHTML =`<span class="disc-comm-text"><strong>${row.dataset.auComm}</span>%</strong>`;
+        row.cells[5].innerHTML = `<span class="disc-comm-text"><strong>${row.dataset.auComm}</span>%</strong>`;
 
         row.cells[6].innerHTML =
             `<span class="net-text"><strong><span class="currency-text">${row.dataset.currency}</span> ${row.dataset.net}</span><strong>`;
 
-        row.cells[7].innerHTML =`<span class="markup-text"><strong><span class="currency-text">${row.dataset.currency}</span> ${row.dataset.markup}</span><strong>`;
+        row.cells[7].innerHTML = `<span class="markup-text"><strong><span class="currency-text">${row.dataset.currency}</span> ${row.dataset.markup}</span><strong>`;
 
-        row.cells[8].innerHTML =`<span class="gross-text"><strong><span class="currency-text">${row.dataset.currency}</span> ${row.dataset.gross}</span></strong>`;
+        row.cells[8].innerHTML = `<span class="gross-text"><strong><span class="currency-text">${row.dataset.currency}</span> ${row.dataset.gross}</span></strong>`;
 
-        row.cells[9].innerHTML =`<span class="valid-until-value">${formatValidUntil(row.dataset.validUntil)}</span>`;
+        row.cells[9].innerHTML = `<span class="valid-until-value">${formatValidUntil(row.dataset.validUntil)}</span>`;
 
         row.cells[10].innerHTML = renderStatusBadge(row.dataset.status);
 
@@ -695,45 +704,44 @@ document.addEventListener('click', function(e) {
             })
 
         })
-        .then(response => {
+            .then(response => {
 
-            if (!response.ok) {
-                throw new Error('Update failed');
-            }
-
-            return response.json();
-
-        })
-        .then(data => {
-
-            if (data.success) 
-            {
-                const row = document.getElementById('fare-entry-row-' + id);
-                if (row) {
-                    row.dataset.status = status;
-                    row.dataset.source = source;
-                    row.cells[3].innerHTML = sourceBadge(source);
-                    row.cells[10].innerHTML = renderStatusBadge(status);
+                if (!response.ok) {
+                    throw new Error('Update failed');
                 }
 
-                toast(data.message || 'Updated successfully.','success');
-                
-                setTimeout(() => {
-                    location.reload();
-                }, 1000);
+                return response.json();
 
-            } else {
+            })
+            .then(data => {
 
-                toast(data.message || 'Update failed.','danger');
+                if (data.success) {
+                    const row = document.getElementById('fare-entry-row-' + id);
+                    if (row) {
+                        row.dataset.status = status;
+                        row.dataset.source = source;
+                        row.cells[3].innerHTML = sourceBadge(source);
+                        row.cells[10].innerHTML = renderStatusBadge(status);
+                    }
 
-            }
+                    toast(data.message || 'Updated successfully.', 'success');
 
-        })
-        .catch(error => {
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
 
-            console.error('Update error:', error);
+                } else {
 
-        });
+                    toast(data.message || 'Update failed.', 'danger');
+
+                }
+
+            })
+            .catch(error => {
+
+                console.error('Update error:', error);
+
+            });
     }
 
 
@@ -804,72 +812,72 @@ function deleteFareEntry(id) {
         }
 
     })
-    .then(async response => {
+        .then(async response => {
 
-        const text = await response.text();
+            const text = await response.text();
 
-        console.log('Delete response:', text);
+            console.log('Delete response:', text);
 
-        if (!response.ok) {
-            throw new Error('Delete failed');
-        }
+            if (!response.ok) {
+                throw new Error('Delete failed');
+            }
 
-        return JSON.parse(text);
-    })
-    .then(data => {
+            return JSON.parse(text);
+        })
+        .then(data => {
 
-       if (data.success) {
-            toast(data.message ?? 'Deleted successfully.');
+            if (data.success) {
+                toast(data.message ?? 'Deleted successfully.');
 
-            setTimeout(() => {
-                location.reload();
-            }, 1000);
-        }
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            }
 
-        // row remove without page reload
-        const row = document.getElementById(
-            'fare-entry-row-' + id
-        );
+            // row remove without page reload
+            const row = document.getElementById(
+                'fare-entry-row-' + id
+            );
 
-        if (row) {
-            row.remove();
-        }
+            if (row) {
+                row.remove();
+            }
 
-    })
-    .catch(error => {
+        })
+        .catch(error => {
 
-        console.error('Delete error:', error);
+            console.error('Delete error:', error);
 
-    });
+        });
 }
 
 // ---------------- Ticketing Team tab (read-only) ----------------
 
 function getTicketingRows() {
-  const q = (document.getElementById("tt-search").value || "").trim().toLowerCase();
-  const source = document.getElementById("tt-filter-source").value;
-  const status = document.getElementById("tt-filter-status").value;
-  const sort = document.getElementById("tt-sort").value;
-  let rows = mockFares.filter(f => {
-    const hay = `${f.airline} ${f.origin} ${f.destination}`.toLowerCase();
-    if (q && !hay.includes(q)) return false;
-    if (source && f.source !== source) return false;
-    if (status && statusFor(f) !== status) return false;
-    return true;
-  });
-  rows.sort((a, b) => {
-    if (sort === "commission_desc") return b.commissionPct - a.commissionPct;
-    if (sort === "margin_desc") return calcFare(b).margin - calcFare(a).margin;
-    return new Date(a.validUntil) - new Date(b.validUntil);
-  });
-  return rows;
+    const q = (document.getElementById("tt-search").value || "").trim().toLowerCase();
+    const source = document.getElementById("tt-filter-source").value;
+    const status = document.getElementById("tt-filter-status").value;
+    const sort = document.getElementById("tt-sort").value;
+    let rows = mockFares.filter(f => {
+        const hay = `${f.airline} ${f.origin} ${f.destination}`.toLowerCase();
+        if (q && !hay.includes(q)) return false;
+        if (source && f.source !== source) return false;
+        if (status && statusFor(f) !== status) return false;
+        return true;
+    });
+    rows.sort((a, b) => {
+        if (sort === "commission_desc") return b.commissionPct - a.commissionPct;
+        if (sort === "margin_desc") return calcFare(b).margin - calcFare(a).margin;
+        return new Date(a.validUntil) - new Date(b.validUntil);
+    });
+    return rows;
 }
 
 // ---------------- Nav ----------------
 
 const TOPBAR_COPY = {
-  manager: { title: "Ticketing Manager", desc: "Enter the published/net fare, the IATA/BSP commission or private tour-code discount, and the agency markup — the sell fare for the Ticketing Team is calculated automatically." },
-  ticketing: { title: "Ticketing Team", desc: "Everything needed to issue a ticket correctly — net fare, applicable IATA/BSP commission or private discount, sell price, and margin." }
+    manager: { title: "Ticketing Manager", desc: "Enter the published/net fare, the IATA/BSP commission or private tour-code discount, and the agency markup — the sell fare for the Ticketing Team is calculated automatically." },
+    ticketing: { title: "Ticketing Team", desc: "Everything needed to issue a ticket correctly — net fare, applicable IATA/BSP commission or private discount, sell price, and margin." }
 };
 
 // ---------------- Init ----------------
@@ -897,32 +905,32 @@ if (searchForm) {
                 'Accept': 'application/json'
             }
         })
-        .then(async response => {
+            .then(async response => {
 
-            console.log('STATUS:', response.status);
+                console.log('STATUS:', response.status);
 
-            if (!response.ok) {
-                const text = await response.text();
-                console.error('SERVER RESPONSE:', text);
-                throw new Error('Search request failed');
-            }
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.error('SERVER RESPONSE:', text);
+                    throw new Error('Search request failed');
+                }
 
-            return response.json();
-        })
-        .then(data => {
+                return response.json();
+            })
+            .then(data => {
 
-            const tbody = document.getElementById('master-table-body');
+                const tbody = document.getElementById('master-table-body');
 
-            tbody.innerHTML = '';
+                tbody.innerHTML = '';
 
-            data.airlineCommissions.forEach(commission => {
+                data.airlineCommissions.forEach(commission => {
 
-                const commissionActions = document.getElementById('view-manager') ? `
+                    const commissionActions = document.getElementById('view-manager') ? `
                             <td>
                                 <button type="button" class="btn edit-commission" data-id="${commission.id}"><i class="bi bi-pencil-square" title="Edit"></i></button>
                             </td>` : '';
 
-                tbody.innerHTML += `
+                    tbody.innerHTML += `
                     <tr id="commission-row-${commission.id}">
                         <td>
                             <span class="airline-text">
@@ -944,24 +952,28 @@ if (searchForm) {
 
                         <td>
                             <span class="au-text">
-                                ${parseFloat(commission.au_commission ?? 0).toFixed(2)}%
+                                <strong>
+                                    ${parseFloat(commission.au_commission ?? 0).toFixed(2)}%
+                                </strong>
                             </span>
                         </td>
 
                         <td>
                             <span class="exau-text">
-                                ${parseFloat(commission.ex_au_commission ?? 0).toFixed(2)}%
+                                <strong>
+                                    ${parseFloat(commission.ex_au_commission ?? 0).toFixed(2)}%
+                                </strong>
                             </span>
                         </td>
 
                         ${commissionActions}
                     </tr>
                 `;
+                });
+            })
+            .catch(error => {
+                console.error('Search error:', error);
             });
-        })
-        .catch(error => {
-            console.error('Search error:', error);
-        });
     });
 }
 
@@ -977,7 +989,7 @@ if (fareSearchForm) {
 
         const search = searchInput.value.trim();
 
-        const url = new URL(fareSearchForm.action,window.location.origin);
+        const url = new URL(fareSearchForm.action, window.location.origin);
 
         if (search !== '') {
             url.searchParams.set('fare_search', search);
@@ -1015,43 +1027,43 @@ if (fareSearchForm) {
             }
         })
 
-        .then(async response => {
+            .then(async response => {
 
-            console.log('FARE STATUS:', response.status);
-            
-            if (!response.ok) {
+                console.log('FARE STATUS:', response.status);
 
-                const text = await response.text();
+                if (!response.ok) {
 
-                console.error(
-                    'FARE SERVER RESPONSE:',
-                    text
-                );
+                    const text = await response.text();
 
-                throw new Error('Fare search request failed');
-            }
+                    console.error(
+                        'FARE SERVER RESPONSE:',
+                        text
+                    );
 
-            return response.json();
-        })
+                    throw new Error('Fare search request failed');
+                }
 
-        .then(data => {
+                return response.json();
+            })
 
-            const tbody = document.getElementById('ticketing-table-body');
+            .then(data => {
 
-            if (!tbody) {
-                console.error('fare-table-body not found');
-                return;
-            }
+                const tbody = document.getElementById('ticketing-table-body');
 
-            tbody.innerHTML = '';
+                if (!tbody) {
+                    console.error('fare-table-body not found');
+                    return;
+                }
 
-            data.farecomissentry.forEach(entry => {
-                const net = parseFloat(entry.net ?? 0);
-                const gross = parseFloat(entry.gross ?? 0);
-                const currencyCode = entry.currency?.code ?? '-';
+                tbody.innerHTML = '';
 
-                const margin = gross - net;
-                tbody.innerHTML += `
+                data.farecomissentry.forEach(entry => {
+                    const net = parseFloat(entry.net ?? 0);
+                    const gross = parseFloat(entry.gross ?? 0);
+                    const currencyCode = entry.currency?.code ?? '-';
+
+                    const margin = gross - net;
+                    tbody.innerHTML += `
                     <tr>
 
                         <td>
@@ -1061,12 +1073,12 @@ if (fareSearchForm) {
                         <td class="text-nowrap">
                             <strong>
                                 ${entry.route ? `${entry.route.origin ?? ''} (${entry.route.origin_code ?? ''}) → ${entry.route.destination ?? ''} (${entry.route.destination_code ?? ''})` : `${entry.origin ?? ''} → ${entry.destination ?? ''}`
-                                }
+                        }
                             </strong>
                         </td>
 
                         <td>
-                            ${entry.cabin ? entry.cabin.name : '' }
+                            ${entry.cabin ? entry.cabin.name : ''}
                         </td>
 
                         <td class="text-nowrap">
@@ -1118,17 +1130,17 @@ if (fareSearchForm) {
 
                     </tr>
                 `;
+                });
+            })
+
+            .catch(error => {
+
+                console.error(
+                    'Fare Search Error:',
+                    error
+                );
+
             });
-        })
-
-        .catch(error => {
-
-            console.error(
-                'Fare Search Error:',
-                error
-            );
-
-        });
     });
 }
 
@@ -1180,32 +1192,32 @@ document.addEventListener('click', function (e) {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(response => {
+            .then(response => {
 
-            if (!response.ok) {
-                throw new Error('Failed to load history');
-            }
+                if (!response.ok) {
+                    throw new Error('Failed to load history');
+                }
 
-            return response.json();
-        })
-        .then(data => {
+                return response.json();
+            })
+            .then(data => {
 
-            if (!data.success) {
-                throw new Error('History not found');
-            }
+                if (!data.success) {
+                    throw new Error('History not found');
+                }
 
-            renderHistory(data.history);
-        })
-        .catch(error => {
+                renderHistory(data.history);
+            })
+            .catch(error => {
 
-            console.error('History error:', error);
+                console.error('History error:', error);
 
-            body.innerHTML = `
+                body.innerHTML = `
                 <div class="alert alert-danger">
                     Failed to load history.
                 </div>
             `;
-        });
+            });
     }
 });
 
@@ -1293,11 +1305,10 @@ function renderHistoryValues(log) {
         `;
     }
 
-    if (log.action === 'updated' && log.old_values && log.new_values)
-    {
-        const oldValues = typeof log.old_values === 'string'? JSON.parse(log.old_values): log.old_values;
+    if (log.action === 'updated' && log.old_values && log.new_values) {
+        const oldValues = typeof log.old_values === 'string' ? JSON.parse(log.old_values) : log.old_values;
 
-        const newValues = typeof log.new_values === 'string'? JSON.parse(log.new_values): log.new_values;
+        const newValues = typeof log.new_values === 'string' ? JSON.parse(log.new_values) : log.new_values;
 
         let changes = '';
 
@@ -1362,10 +1373,10 @@ function renderHistoryValues(log) {
 const closeHistoryBtn = document.getElementById('closeHistory');
 const historyOverlayBtn = document.getElementById('historyOverlay');
 
-if(closeHistoryBtn){
+if (closeHistoryBtn) {
     document.getElementById('closeHistory').addEventListener('click', closeHistoryPanel);
 }
-if(historyOverlayBtn){
+if (historyOverlayBtn) {
     document.getElementById('historyOverlay').addEventListener('click', closeHistoryPanel);
 }
 function closeHistoryPanel() {
@@ -1405,78 +1416,79 @@ document.addEventListener('submit', function (e) {
         body: formData
     })
 
-    .then(response => {
+        .then(response => {
 
-        if (!response.ok) {
-            throw new Error('Update failed');
-        }
-        return response.json();
-
-    })
-
-    .then(data => {
-
-        if (data.success) {
-
-            // Message
-            toast(data.message || 'Route codes updated successfully.','success');
-
-            // Modal close
-            const modalElement = form.closest('.modal');
-
-            if (modalElement) {
-                const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
-                modal.hide();
+            if (!response.ok) {
+                throw new Error('Update failed');
             }
+            return response.json();
 
-            // Button normal state
-            if (submitButton) {
-                submitButton.disabled = false;
-                submitButton.innerText = 'Save Codes';
-            }
-            // Frontend route text update
-            const rowId = form.dataset.rowId;
-            const row = document.getElementById(rowId);
+        })
 
-            if (row) {
-                const origin = row.dataset.origin;
-                const destination = row.dataset.destination;
+        .then(data => {
 
-                const originCode = data.origin_code || '';
-                const destinationCode = data.destination_code || '';
+            if (data.success) {
 
-                // Update dataset
-                row.dataset.originCode = originCode;
-                row.dataset.destinationCode = destinationCode;
+                // Message
+                toast(data.message || 'Route codes updated successfully.', 'success');
 
-                // Route cell
-                const routeCell = row.querySelector('.route-code-cell');
+                // Modal close
+                const modalElement = form.closest('.modal');
 
-                if (routeCell) {
-
-                    routeCell.innerHTML = `<strong class="route-text">${origin} (${originCode}) → ${destination} (${destinationCode})</strong>${!originCode || !destinationCode? `<button type="button" class="btn btn-sm btn-outline-primary ms-2 add-route-code-btn" data-bs-toggle="modal" data-bs-target="#routeCodeModal${row.id.replace('fare-entry-row-', '')}">Add Code</button>`: ''}`;
+                if (modalElement) {
+                    const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+                    modal.hide();
                 }
-            }
+
+                // Button normal state
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.innerText = 'Save Codes';
+                }
+                // Frontend route text update
+                const rowId = form.dataset.rowId;
+                const row = document.getElementById(rowId);
+
+                if (row) {
+                    const origin = row.dataset.origin;
+                    const destination = row.dataset.destination;
+
+                    const originCode = data.origin_code || '';
+                    const destinationCode = data.destination_code || '';
+
+                    // Update dataset
+                    row.dataset.originCode = originCode;
+                    row.dataset.destinationCode = destinationCode;
+
+                    // Route cell
+                    const routeCell = row.querySelector('.route-code-cell');
+
+                    if (routeCell) {
+
+                        routeCell.innerHTML = `<strong class="route-text">${origin} (${originCode}) → ${destination} (${destinationCode})</strong>${!originCode || !destinationCode ? `<button type="button" class="btn btn-sm btn-outline-primary ms-2 add-route-code-btn" data-bs-toggle="modal" data-bs-target="#routeCodeModal${row.id.replace('fare-entry-row-', '')}">Add Code</button>` : ''}`;
+                    }
+                }
 
             } else {
 
-                toast(data.message || 'Update failed.','danger');
+                toast(data.message || 'Update failed.', 'danger');
                 if (submitButton) {
                     submitButton.disabled = false;
                     submitButton.innerText = 'Save Codes';
                 }
             }
 
-    })
-    .catch(error => {
-        console.error('Route code update error:', error);
-        toast('Something went wrong while updating route codes.','danger');
+        })
+        .catch(error => {
+            console.error('Route code update error:', error);
+            toast('Something went wrong while updating route codes.', 'danger');
 
-        if (submitButton) {
-            submitButton.disabled = false;
-            submitButton.innerText = 'Save Codes';
-        }
-    });
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.innerText = 'Save Codes';
+            }
+        });
 
 });
+
 

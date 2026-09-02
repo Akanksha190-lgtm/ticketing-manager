@@ -232,15 +232,15 @@
                                         </td>
 
                                         <td>
-                                            <span class="au-text">
+                                            <span class="au-text"><strong>
                                                 {{ number_format($commission->au_commission, 2) }}%
-                                            </span>
+                                            </strong></span>
                                         </td>
 
                                         <td>
-                                            <span class="exau-text">
+                                            <span class="exau-text"><strong>
                                                 {{ number_format($commission->ex_au_commission, 2) }}%
-                                            </span>
+                                            </strong></span>
                                         </td>
                                     </tr>
                                 @endforeach

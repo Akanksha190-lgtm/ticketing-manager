@@ -67,7 +67,7 @@
                 <select id="f-currency" name="currency_id">
                     <option value="">Select currency</option>
                     @foreach($currencies as $currency)
-                        <option value="{{ $currency->id }}">
+                        <option value="{{ $currency->id }}" data-code="{{ $currency->code }}">
                             {{ $currency->code }}
                         </option>
                     @endforeach
@@ -263,15 +263,15 @@
                         </td>
 
                         <td>
-                            <span class="au-text white-space: nowrap;">
+                            <span class="au-text white-space: nowrap;"><strong>
                                 {{ number_format($commission->au_commission, 2) }}%
-                            </span>
+                            </strong></span>
                         </td>
 
                         <td>
-                            <span class="exau-text white-space: nowrap;">
+                            <span class="exau-text white-space: nowrap;"><strong>
                                 {{ number_format($commission->ex_au_commission, 2) }}%
-                            </span>
+                            </strong></span>
                         </td>
 
                         <td class="text-nowrap">

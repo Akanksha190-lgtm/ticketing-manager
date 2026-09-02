@@ -71,6 +71,17 @@ class FareCommissionEntriesController extends Controller
         $data['airline_code_id'] = $airline->id;
         $data['au_commission'] = $airline->au_commission;
 
+        // Automatically calculate net and gross fare using airline's au_commission
+        $published = (float) ($data['published'] ?? 0);
+        $commPct = (float) ($airline->au_commission ?? 0);
+        $markup = (float) ($data['markup'] ?? 0);
+
+        $net = $commPct > 0 ? ($published * ($commPct / 100)) * $markup : $published;
+        $gross = $net + $markup;
+
+        $data['net'] = $net;
+        $data['gross'] = $gross;
+
         $route = Route::firstOrCreate(
             [
                 'origin' => $request->origin,
@@ -123,35 +134,44 @@ class FareCommissionEntriesController extends Controller
         $airline = AirlineCommission::where('airline',trim($request->airline_id))->first();
         $oldAuCommission = $airline?->au_commission;
         $hasAuCommission = $request->has('au_commission') && $request->input('au_commission') !== '';
-        
-        $entry->update([
-            'airline_id' => $airline ? $airline->id : null,
-            'route_id' => $route->id,
-            'cabin_id' => $cabin ? $cabin->id : null,
-            'source_id' => $source ? $source->id : null,
-            'published' => $request->published,
-            'net'     =>  $request->net,
-            'markup' => $request->markup,
-            'travel_from' => $request->travel_from,
-            'travel_to' => $request->travel_to,
-            'gross' => $request->gross,
-            'valid_until' => $request->valid_until,
-            'status' => $request->status,
-        ]);
 
         if ($hasAuCommission && $airline) {
             $airline->update([
                 'au_commission' => $request->au_commission,
             ]);
             $airline->refresh();
+        }
 
+        $published = (float) ($request->published ?? $entry->published);
+        $markup = (float) ($request->markup ?? $entry->markup);
+        $commPct = $airline ? (float) ($airline->au_commission ?? 0) : (float) ($entry->airline->au_commission ?? 0);
+
+        $net = $commPct > 0 ? ($published * ($commPct / 100)) * $markup : $published;
+        $gross = $net + $markup;
+        
+        $entry->update([
+            'airline_id' => $airline ? $airline->id : $entry->airline_id,
+            'route_id' => $route->id,
+            'cabin_id' => $cabin ? $cabin->id : null,
+            'source_id' => $source ? $source->id : null,
+            'published' => $published,
+            'net'     =>  $net,
+            'markup' => $markup,
+            'travel_from' => $request->travel_from,
+            'travel_to' => $request->travel_to,
+            'gross' => $gross,
+            'valid_until' => $request->valid_until,
+            'status' => $request->status,
+        ]);
+
+        if ($hasAuCommission && $airline) {
             // Keep the master commission change in the fare entry's existing audit card.
             $auditLog = AuditLog::where('model_type', FareCommissionEntries::class)
                 ->where('model_id', $entry->id)
                 ->latest('id')
                 ->first();
 
-            if ($auditLog && $hasAuCommission) {
+            if ($auditLog) {
                 $oldValues = $auditLog->old_values ?? [];
                 $newValues = $auditLog->new_values ?? [];
                 $oldValues['au_commission'] = $oldAuCommission;
@@ -206,11 +226,10 @@ class FareCommissionEntriesController extends Controller
             'route_id' => ['nullable', 'integer', 'exists:routes,id'],
             'cabin_id' => ['required', 'integer', 'exists:cabins,id'],
             'source_id' => ['required', 'integer', 'exists:fare_sources,id'],
-            'tour_code' => ["required_if:source_id,{$privateTourCode}", 'string', 'max:100'],
+            'tour_code' => ['nullable','required_if:source_id,' . $privateTourCode,'string','max:100'],
             'pcc_iata_ref' => ['nullable', 'string', 'max:100'],
             'published' => ['required', 'numeric', 'min:0'],
             'currency_id' => ['required', 'integer', 'exists:currencies,id'],
-            // 'disc_comm' => ['required', 'numeric', 'min:0', 'max:100'],
             'net' => ['nullable', 'numeric', 'min:0'],
             'markup' => ['required', 'numeric', 'min:0'],
             'travel_from' => ['nullable', 'date'],
