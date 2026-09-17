@@ -359,12 +359,24 @@ document.addEventListener('click', function (e) {
 
         row.cells[2].innerHTML =
             `<span class="numeric-text">${row.dataset.numeric}</span>`;
+        if (row.dataset.code === 'MU' && row.dataset.au == '3.00') {
 
-        row.cells[3].innerHTML =
-            `<span class="au-text">${row.dataset.au}%</span>`;
+            row.cells[3].innerHTML = `
+                <span class="au-text" style="white-space: nowrap;">
+                    <strong>${row.dataset.au}%</strong>
+                </span>
 
+                <span style="font-size: 11px; margin-left: 6px; color: #666; white-space: nowrap;">
+                    (ADT/CHD: 3%, INF: 0%)
+                </span>
+            `;
+
+        } else {
+            row.cells[3].innerHTML =
+                `<span class="au-text"><strong>${row.dataset.au}%</strong></span>`;
+        }
         row.cells[4].innerHTML =
-            `<span class="exau-text">${row.dataset.exau}%</span>`;
+            `<span class="exau-text"><strong>${row.dataset.exau}%</strong></span>`;
 
         // Save button ko Edit bana do
         const saveButton = row.querySelector('.save-commission');
@@ -953,7 +965,7 @@ if (searchForm) {
                         <td>
                             <span class="au-text">
                                 <strong>
-                                    ${parseFloat(commission.au_commission ?? 0).toFixed(2)}%
+                                    ${getAuCommissionHtml(commission)}
                                 </strong>
                             </span>
                         </td>
@@ -1491,4 +1503,26 @@ document.addEventListener('submit', function (e) {
 
 });
 
+function getAuCommissionHtml(commission) {
+    const isMU = commission.code === 'MU';
+    const isAU = commission.au_commission == '3.00';
 
+    if (isMU && isAU) {
+        return `
+            <span class="au-text" style="white-space: nowrap;">
+                <strong>${parseFloat(commission.au_commission ?? 0).toFixed(2)}%</strong>
+            </span>
+            <span style="font-size: 11px; margin-left: 6px; color: #666; white-space: nowrap;">
+                (ADT/CHD: 3%, INF: 0%)
+            </span>
+        `;
+    }
+
+    return `
+        <span class="au-text" style="white-space: nowrap;">
+            <strong>
+                ${parseFloat(commission.au_commission ?? 0).toFixed(2)}%
+            </strong>
+        </span>
+    `;
+}

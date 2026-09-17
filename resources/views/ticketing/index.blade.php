@@ -263,9 +263,21 @@
                         </td>
 
                         <td>
-                            <span class="au-text white-space: nowrap;"><strong>
-                                {{ number_format($commission->au_commission, 2) }}%
-                            </strong></span>
+                            @if($commission->code === 'MU' && $commission->au_commission == 3.00)
+                                <span class="au-text" style="white-space: nowrap;">
+                                    <strong>{{ number_format($commission->au_commission, 2) }}%</strong>
+                                </span>
+
+                                <span style="font-size: 11px; margin-left: 6px; color: #666;">
+                                    (ADT/CHD: 3%, INF: 0%)
+                                </span>
+                            @else
+                                <span class="au-text" style="white-space: nowrap;">
+                                    <strong>
+                                        {{ number_format($commission->au_commission, 2) }}%
+                                    </strong>
+                                </span>
+                            @endif
                         </td>
 
                         <td>
